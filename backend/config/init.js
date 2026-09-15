@@ -734,12 +734,21 @@ async function initDB(pool) {
 
     // 19.1c UserGroupMaster - Ensure Owner Group exists
     await runQuery("UserGroupMaster - Owner Group", `
-      IF NOT EXISTS (SELECT 1 FROM UserGroupMaster WHERE UserGroupId = 'DFCF23EE-F6F4-4885-8D26-0056C657595F' OR UPPER(UserGroupCode) = 'OWNER' OR UPPER(UserGroupName) = 'OWNER')
+      IF NOT EXISTS (SELECT 1 FROM UserGroupMaster WHERE UPPER(UserGroupCode) = 'OWNER' OR UPPER(UserGroupName) = 'OWNER')
       BEGIN
-          INSERT INTO UserGroupMaster (UserGroupId, UserGroupCode, UserGroupName, isActive, Createddate)
-          VALUES ('DFCF23EE-F6F4-4885-8D26-0056C657595F', 'Owner', 'Owner', 1, GETDATE())
+          IF NOT EXISTS (SELECT 1 FROM UserGroupMaster WHERE UserGroupId = 'DFCF23EE-F6F4-4885-8D26-0056C657595F')
+          BEGIN
+              INSERT INTO UserGroupMaster (UserGroupId, UserGroupCode, UserGroupName, isActive, Createddate)
+              VALUES ('DFCF23EE-F6F4-4885-8D26-0056C657595F', 'Owner', 'Owner', 1, GETDATE());
+          END
+          ELSE
+          BEGIN
+              INSERT INTO UserGroupMaster (UserGroupId, UserGroupCode, UserGroupName, isActive, Createddate)
+              VALUES (NEWID(), 'Owner', 'Owner', 1, GETDATE());
+          END
       END
     `);
+
 
 
 
