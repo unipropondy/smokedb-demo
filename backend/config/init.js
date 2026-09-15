@@ -732,6 +732,16 @@ async function initDB(pool) {
     await runQuery("UserMaster - FromDate", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[UserMaster]') AND name = 'FromDate') ALTER TABLE [dbo].[UserMaster] ADD [FromDate] DATETIME NULL");
     await runQuery("UserMaster - ToDate", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[UserMaster]') AND name = 'ToDate') ALTER TABLE [dbo].[UserMaster] ADD [ToDate] DATETIME NULL");
 
+    // 19.1c UserGroupMaster - Ensure Owner Group exists
+    await runQuery("UserGroupMaster - Owner Group", `
+      IF NOT EXISTS (SELECT 1 FROM UserGroupMaster WHERE UserGroupId = 'DFCF23EE-F6F4-4885-8D26-0056C657595F' OR UPPER(UserGroupCode) = 'OWNER' OR UPPER(UserGroupName) = 'OWNER')
+      BEGIN
+          INSERT INTO UserGroupMaster (UserGroupId, UserGroupCode, UserGroupName, isActive, Createddate)
+          VALUES ('DFCF23EE-F6F4-4885-8D26-0056C657595F', 'Owner', 'Owner', 1, GETDATE())
+      END
+    `);
+
+
 
 
     // 19.2 Create BusinessDayLog table for Day Start/End history tracking
