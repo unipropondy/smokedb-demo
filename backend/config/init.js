@@ -707,6 +707,28 @@ async function initDB(pool) {
       END
     `);
 
+    // Ensure DateEntry default constraint and columns exist on pre-existing database schemas
+    await runQuery("DateEntry - DateEntryId Default Constraint", `
+      IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DateEntry]') AND name = 'DateEntryId')
+      BEGIN
+          IF NOT EXISTS (
+              SELECT * FROM sys.default_constraints dc 
+              JOIN sys.columns c ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id 
+              WHERE dc.parent_object_id = OBJECT_ID(N'[dbo].[DateEntry]') AND c.name = 'DateEntryId'
+          )
+          BEGIN
+              ALTER TABLE [dbo].[DateEntry] ADD CONSTRAINT [DF_DateEntry_DateEntryId] DEFAULT NEWID() FOR [DateEntryId]
+          END
+      END
+    `);
+    await runQuery("DateEntry - username", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DateEntry]') AND name = 'username') ALTER TABLE [dbo].[DateEntry] ADD [username] VARCHAR(30) NULL");
+    await runQuery("DateEntry - StartDate", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DateEntry]') AND name = 'StartDate') ALTER TABLE [dbo].[DateEntry] ADD [StartDate] DATE NULL");
+    await runQuery("DateEntry - CreatedBy", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DateEntry]') AND name = 'CreatedBy') ALTER TABLE [dbo].[DateEntry] ADD [CreatedBy] VARCHAR(30) NULL");
+    await runQuery("DateEntry - CreatedDate", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DateEntry]') AND name = 'CreatedDate') ALTER TABLE [dbo].[DateEntry] ADD [CreatedDate] DATETIME DEFAULT GETDATE()");
+    await runQuery("DateEntry - UpdateBy", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DateEntry]') AND name = 'UpdateBy') ALTER TABLE [dbo].[DateEntry] ADD [UpdateBy] VARCHAR(30) NULL");
+    await runQuery("DateEntry - UpdateDate", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DateEntry]') AND name = 'UpdateDate') ALTER TABLE [dbo].[DateEntry] ADD [UpdateDate] DATETIME NULL");
+
+
     // 19.2 Create BusinessDayLog table for Day Start/End history tracking
     await runQuery("Create BusinessDayLog table", `
       IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[BusinessDayLog]') AND type in (N'U'))

@@ -45,8 +45,8 @@ router.post("/day-start", async (req, res) => {
       .input("startDate", sql.Date, startDate)
       .input("createdBy", sql.VarChar(30), username || "admin")
       .query(`
-        INSERT INTO DateEntry (username, StartDate, CreatedBy, CreatedDate)
-        VALUES (@username, @startDate, @createdBy, GETDATE())
+        INSERT INTO DateEntry (DateEntryId, username, StartDate, CreatedBy, CreatedDate)
+        VALUES (NEWID(), @username, @startDate, @createdBy, GETDATE())
       `);
 
     // Log Day Start in BusinessDayLog
