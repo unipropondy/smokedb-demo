@@ -404,6 +404,11 @@ async function initDB(pool) {
       END
     `);
 
+    await runQuery("Paymode - YeahPayEnabled", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Paymode]') AND name = 'YeahPayEnabled') ALTER TABLE [dbo].[Paymode] ADD YeahPayEnabled BIT DEFAULT 0");
+    await runQuery("Paymode - DeviceSN", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Paymode]') AND name = 'DeviceSN') ALTER TABLE [dbo].[Paymode] ADD DeviceSN NVARCHAR(50) NULL");
+    await runQuery("Paymode - DeviceSalt", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Paymode]') AND name = 'DeviceSalt') ALTER TABLE [dbo].[Paymode] ADD DeviceSalt NVARCHAR(100) NULL");
+
+
     // 13. Create AIChatSessions and AIChatMessages tables
     await runQuery("Create AIChatSessions", `
       IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AIChatSessions]') AND type in (N'U'))
