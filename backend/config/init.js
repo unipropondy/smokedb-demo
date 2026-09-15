@@ -728,6 +728,11 @@ async function initDB(pool) {
     await runQuery("DateEntry - UpdateBy", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DateEntry]') AND name = 'UpdateBy') ALTER TABLE [dbo].[DateEntry] ADD [UpdateBy] VARCHAR(30) NULL");
     await runQuery("DateEntry - UpdateDate", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[DateEntry]') AND name = 'UpdateDate') ALTER TABLE [dbo].[DateEntry] ADD [UpdateDate] DATETIME NULL");
 
+    // 19.1b UserMaster - FromDate & ToDate license columns
+    await runQuery("UserMaster - FromDate", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[UserMaster]') AND name = 'FromDate') ALTER TABLE [dbo].[UserMaster] ADD [FromDate] DATETIME NULL");
+    await runQuery("UserMaster - ToDate", "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[UserMaster]') AND name = 'ToDate') ALTER TABLE [dbo].[UserMaster] ADD [ToDate] DATETIME NULL");
+
+
 
     // 19.2 Create BusinessDayLog table for Day Start/End history tracking
     await runQuery("Create BusinessDayLog table", `
