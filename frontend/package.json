@@ -9,8 +9,8 @@
     "android": "cross-env NODE_OPTIONS=--max-old-space-size=4096 expo run:android",
     "ios": "cross-env NODE_OPTIONS=--max-old-space-size=4096 expo run:ios",
     "web": "cross-env NODE_OPTIONS=--max-old-space-size=4096 expo start --web",
-    "build:web": "cross-env NODE_OPTIONS=--max-old-space-size=4096 expo export --platform web",
-    "build:customer-display-web": "cross-env NODE_OPTIONS=--max-old-space-size=4096 expo export --platform web --output-dir ../print-bridge/customer-display-web",
+    "build:web": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo export --platform web",
+    "build:customer-display-web": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo export --platform web --output-dir ../print-bridge/customer-display-web",
     "lint": "expo lint"
   },
   "dependencies": {

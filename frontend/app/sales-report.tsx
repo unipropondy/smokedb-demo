@@ -166,6 +166,7 @@ export default function SalesReport() {
     { payMode: "CARD", description: "CARD" },
     { payMode: "NETS", description: "NETS" },
     { payMode: "PAYNOW", description: "PAY NOW" },
+    { payMode: "ONLINE", description: "ONLINE" },
     { payMode: "YEAHPAY PAYNOW", description: "YEAHPAY PAYNOW" },
     { payMode: "YEAHPAY CARD", description: "YEAHPAY CARD" },
     { payMode: "GRAB", description: "GRAB" },
@@ -191,6 +192,7 @@ export default function SalesReport() {
     "CARD",
     "NETS",
     "PAYNOW",
+    "ONLINE",
     "YEAHPAY PAYNOW",
     "YEAHPAY CARD",
     "GRAB",
@@ -1175,18 +1177,115 @@ export default function SalesReport() {
     return grouped;
   }, [dateScopedSales]);
 
+  const paymentBreakdownMetrics = useMemo<Record<string, number>>(() => {
+    const filteredByTypes = dateScopedSales.filter((s) => {
+      const typeUpper = s.OrderType?.toUpperCase().trim() || "";
+      const typeMatch =
+        activeOrderTypes.length === 2 ||
+        (s.OrderType
+          ? activeOrderTypes.includes(typeUpper) || typeUpper === 'LEDGER'
+          : activeOrderTypes.includes("DINE-IN"));
+      return typeMatch;
+    });
+
+    const initialAcc: Record<string, number> = {};
+    dbPaymentModes.forEach((m) => {
+      initialAcc[m.payMode.toUpperCase().trim()] = 0;
+    });
+    initialAcc["CREDIT_OUTSTANDING"] = 0;
+
+    return filteredByTypes.reduce(
+      (acc, s) => {
+        if (s.IsCancelled) {
+          return acc;
+        }
+
+        if (s.OrderType === 'LEDGER') {
+          return acc;
+        }
+
+        const salePayMode = s.PayMode?.trim().toUpperCase() || "";
+
+        // First pass: try exact match
+        let matchedMode = dbPaymentModes.find((m) => {
+          const dbName = String(m.payMode || "").toUpperCase().trim();
+          const dbDesc = String(m.description || "").toUpperCase().trim();
+          return salePayMode === dbName || salePayMode === dbDesc;
+        });
+
+        // Second pass: if no exact match, try greedy/wildcard match
+        if (!matchedMode) {
+          matchedMode = dbPaymentModes.find((m) => {
+            const dbName = String(m.payMode || "").toUpperCase().trim();
+            if ((dbName === "PAYNOW" || dbName === "PAY NOW" || dbName === "UPI" || dbName === "GPAY") &&
+                (salePayMode.includes("PAYNOW") || salePayMode.includes("PAY NOW") || salePayMode.includes("UPI") || salePayMode.includes("GPAY"))) {
+              return true;
+            }
+            if ((dbName === "CASH" || dbName === "CAS") && (salePayMode === "CASH" || salePayMode === "CAS")) {
+              return true;
+            }
+            return false;
+          });
+        }
+
+        if (matchedMode) {
+          const key = matchedMode.payMode.toUpperCase().trim();
+          acc[key] = (acc[key] || 0) + s.SysAmount;
+          if (key === "CREDIT") {
+            acc["CREDIT_OUTSTANDING"] = (acc["CREDIT_OUTSTANDING"] || 0) + (Number(s.OutstandingAmount) || 0);
+          }
+        } else {
+          const key = salePayMode || "CASH";
+          acc[key] = (acc[key] || 0) + s.SysAmount;
+        }
+
+        return acc;
+      },
+      initialAcc
+    );
+  }, [dateScopedSales, activeOrderTypes, dbPaymentModes]);
+
+  const displayedBreakdownModes = useMemo(() => {
+    const modes = dbPaymentModes.filter(m => m.active === 1 || m.Active === 1 || m.active === true || m.Active === true);
+    Object.entries(paymentBreakdownMetrics).forEach(([key, val]) => {
+      if (key === "CREDIT_OUTSTANDING") return;
+      if (val > 0) {
+        const alreadyExists = modes.some(m => m.payMode.toUpperCase().trim() === key);
+        if (!alreadyExists) {
+          const matchedDbMode = dbPaymentModes.find(m => m.payMode.toUpperCase().trim() === key);
+          if (matchedDbMode) {
+            modes.push(matchedDbMode);
+          } else {
+            modes.push({
+              payMode: key,
+              description: key,
+            });
+          }
+        }
+      }
+    });
+    return modes;
+  }, [dbPaymentModes, paymentBreakdownMetrics]);
+
   const baseFilteredSales = useMemo(() => {
+    const allDisplayedKeys = displayedBreakdownModes.map(m => m.payMode.toUpperCase().trim());
+    const isFilterApplied = activePaymentModes.length < (allDisplayedKeys.length + 1);
+
     return groupedSales.filter((s) => {
       const modeUpper = s.PayMode?.toUpperCase().trim() || "";
       const isUpiMode = modeUpper.includes("UPI") || modeUpper.includes("GPAY");
+      const isOnlineMode = modeUpper.includes("ONLINE");
       const typeUpper = s.OrderType?.toUpperCase().trim() || "";
 
       // Support checking components of combined payment modes (e.g. "CASH + NETS")
       const splitModes = modeUpper.includes("+") ? modeUpper.split("+").map((m: string) => m.trim()) : [modeUpper];
 
       const modeMatch =
+        !isFilterApplied ||
         splitModes.some((m: string) => activePaymentModes.includes(m)) ||
         (activePaymentModes.includes("UPI") && isUpiMode) ||
+        (activePaymentModes.includes("ONLINE") && isOnlineMode) ||
+        (activePaymentModes.includes("PAYNOW") && (modeUpper.includes("PAYNOW") || modeUpper.includes("PAY NOW"))) ||
         (showCancelledOrders && s.IsCancelled) ||
         (typeUpper === 'LEDGER' && (
           splitModes.some((m: string) => activePaymentModes.includes(m)) ||
@@ -1206,6 +1305,7 @@ export default function SalesReport() {
     activePaymentModes,
     activeOrderTypes,
     showCancelledOrders,
+    displayedBreakdownModes,
   ]);
 
   const filteredSales = useMemo(() => {
@@ -1324,6 +1424,7 @@ export default function SalesReport() {
     CARD: "#818cf8",
     NETS: "#3b82f6",
     PAYNOW: "#f59e0b",
+    ONLINE: "#10b981",
     GRAB: "#00b14f",
     FOODPANDA: "#d70f64",
     UPI: "#f59e0b",
@@ -1360,96 +1461,6 @@ export default function SalesReport() {
     if (m.includes('YEAH')) return 'scan-outline';
     return 'wallet-outline';
   };
-
-  const paymentBreakdownMetrics = useMemo<Record<string, number>>(() => {
-    const filteredByTypes = dateScopedSales.filter((s) => {
-      const typeUpper = s.OrderType?.toUpperCase().trim() || "";
-      const typeMatch =
-        activeOrderTypes.length === 2 ||
-        (s.OrderType
-          ? activeOrderTypes.includes(typeUpper) || typeUpper === 'LEDGER'
-          : activeOrderTypes.includes("DINE-IN"));
-      return typeMatch;
-    });
-
-    const initialAcc: Record<string, number> = {};
-    dbPaymentModes.forEach((m) => {
-      initialAcc[m.payMode.toUpperCase().trim()] = 0;
-    });
-    initialAcc["CREDIT_OUTSTANDING"] = 0;
-
-    return filteredByTypes.reduce(
-      (acc, s) => {
-        if (s.IsCancelled) {
-          return acc;
-        }
-
-        if (s.OrderType === 'LEDGER') {
-          return acc;
-        }
-
-        const salePayMode = s.PayMode?.trim().toUpperCase() || "";
-
-        // First pass: try exact match
-        let matchedMode = dbPaymentModes.find((m) => {
-          const dbName = String(m.payMode || "").toUpperCase().trim();
-          const dbDesc = String(m.description || "").toUpperCase().trim();
-          return salePayMode === dbName || salePayMode === dbDesc;
-        });
-
-        // Second pass: if no exact match, try greedy/wildcard match
-        if (!matchedMode) {
-          matchedMode = dbPaymentModes.find((m) => {
-            const dbName = String(m.payMode || "").toUpperCase().trim();
-            if ((dbName === "PAYNOW" || dbName === "PAY NOW" || dbName === "UPI" || dbName === "GPAY") &&
-                (salePayMode.includes("PAYNOW") || salePayMode.includes("PAY NOW") || salePayMode.includes("UPI") || salePayMode.includes("GPAY"))) {
-              return true;
-            }
-            if ((dbName === "CASH" || dbName === "CAS") && (salePayMode === "CASH" || salePayMode === "CAS")) {
-              return true;
-            }
-            return false;
-          });
-        }
-
-        if (matchedMode) {
-          const key = matchedMode.payMode.toUpperCase().trim();
-          acc[key] = (acc[key] || 0) + s.SysAmount;
-          if (key === "CREDIT") {
-            acc["CREDIT_OUTSTANDING"] = (acc["CREDIT_OUTSTANDING"] || 0) + (Number(s.OutstandingAmount) || 0);
-          }
-        } else {
-          const key = salePayMode || "CASH";
-          acc[key] = (acc[key] || 0) + s.SysAmount;
-        }
-
-        return acc;
-      },
-      initialAcc
-    );
-  }, [dateScopedSales, activeOrderTypes, dbPaymentModes]);
-
-  const displayedBreakdownModes = useMemo(() => {
-    const modes = dbPaymentModes.filter(m => m.active === 1 || m.Active === 1 || m.active === true || m.Active === true);
-    Object.entries(paymentBreakdownMetrics).forEach(([key, val]) => {
-      if (key === "CREDIT_OUTSTANDING") return;
-      if (val > 0) {
-        const alreadyExists = modes.some(m => m.payMode.toUpperCase().trim() === key);
-        if (!alreadyExists) {
-          const matchedDbMode = dbPaymentModes.find(m => m.payMode.toUpperCase().trim() === key);
-          if (matchedDbMode) {
-            modes.push(matchedDbMode);
-          } else {
-            modes.push({
-              payMode: key,
-              description: key,
-            });
-          }
-        }
-      }
-    });
-    return modes;
-  }, [dbPaymentModes, paymentBreakdownMetrics]);
 
   const paymentBreakdownTotal = useMemo(() => {
     return Object.entries(paymentBreakdownMetrics).reduce((sum, [key, val]) => {
@@ -2834,62 +2845,6 @@ export default function SalesReport() {
                   <Text style={styles.emptyChartText}>No sales data</Text>
                 </View>
               )}
-            </View>
-          </View>
-          <View
-            style={[
-              styles.chartCard,
-              {
-                width:
-                  SCREEN_W > 768 ? Math.max(300, (SCREEN_W - 64) / 3) : 300,
-              },
-            ]}
-          >
-            <View style={styles.chartCardHeader}>
-              <Text style={styles.cardTitle}>ORDER TYPES</Text>
-              <Ionicons name="layers-outline" size={14} color={Theme.primary} />
-            </View>
-            <View style={styles.orderTypeStats}>
-              {(() => {
-                // Use dateScopedSales (date-only filtered) so payment mode filters
-                // don't distort the order type split counts
-                const activeSales = dateScopedSales.filter(s => !s.IsCancelled);
-                const isTakeaway = (s: any) =>
-                  s.OrderType === "TAKEAWAY" ||
-                  s.Section === "TAKEAWAY" ||
-                  (!s.OrderType && s.TableNo && String(s.TableNo).startsWith("TW-"));
-                const takeaway = activeSales.filter(isTakeaway).length;
-                const dineIn = activeSales.filter(
-                  (s) => !isTakeaway(s),
-                ).length;
-                const total = dineIn + takeaway;
-                return (
-                  <>
-                    <View style={styles.statRow}>
-                      <View style={styles.statLabel}>
-                        <Text style={styles.statIcon}>🪑</Text>
-                        <Text style={styles.statName}>Dine-In</Text>
-                      </View>
-                      <Text
-                        style={[styles.statValue, { color: Theme.primary }]}
-                      >
-                        {total > 0 ? ((dineIn / total) * 100).toFixed(0) : 0}%
-                      </Text>
-                    </View>
-                    <View style={styles.statRow}>
-                      <View style={styles.statLabel}>
-                        <Text style={styles.statIcon}>🛍️</Text>
-                        <Text style={styles.statName}>Takeaway</Text>
-                      </View>
-                      <Text
-                        style={[styles.statValue, { color: Theme.warning }]}
-                      >
-                        {total > 0 ? ((takeaway / total) * 100).toFixed(0) : 0}%
-                      </Text>
-                    </View>
-                  </>
-                );
-              })()}
             </View>
           </View>
 
