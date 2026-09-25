@@ -54,6 +54,6 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 
 const styles = StyleSheet.create({
   skeleton: {
-    backgroundColor: Theme.border, // Use a neutral color from the theme
+    backgroundColor: "#2A323B", // Darker placeholder color
   },
 });

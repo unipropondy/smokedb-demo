@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
   Image,
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,20 +20,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { API_URL } from "@/constants/Config";
 import { Fonts } from "@/constants/Fonts";
 import { Theme } from "@/constants/theme";
-import { API_URL } from "@/constants/Config";
 import { useAuthStore } from "@/stores/authStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /* ============ ROLE CONFIG ============ */
 
 const ROLE_CONFIG: Record<string, { color: string; icon: string; label: string }> = {
-  ADMIN:      { color: "#DC2626", icon: "shield-checkmark", label: "Administrator" },
-  MANAGER:    { color: "#7C3AED", icon: "briefcase",        label: "Manager" },
-  SUPERVISOR: { color: "#0891B2", icon: "eye",              label: "Supervisor" },
-  CASHIER:    { color: Theme.primary, icon: "cash",         label: "Cashier" },
-  KDS:        { color: "#10B981", icon: "restaurant",       label: "Kitchen" },
+  ADMIN: { color: "#DC2626", icon: "shield-checkmark", label: "Administrator" },
+  MANAGER: { color: "#7C3AED", icon: "briefcase", label: "Manager" },
+  SUPERVISOR: { color: "#0891B2", icon: "eye", label: "Supervisor" },
+  CASHIER: { color: Theme.primary, icon: "cash", label: "Cashier" },
+  KDS: { color: "#10B981", icon: "restaurant", label: "Kitchen" },
 };
 
 export default function LoginScreen() {
@@ -90,7 +90,7 @@ export default function LoginScreen() {
             setPassword(p || "");
             setRememberMe(true);
           }
-        } catch (e) {}
+        } catch (e) { }
       };
       loadRemembered();
 
@@ -111,11 +111,11 @@ export default function LoginScreen() {
 
   const shakeError = () => {
     Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 10,  duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration: 60, useNativeDriver: true }),
       Animated.timing(shakeAnim, { toValue: -10, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 6,   duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -6,  duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0,   duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 6, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -6, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
     ]).start();
   };
 
@@ -153,7 +153,7 @@ export default function LoginScreen() {
           } else {
             await AsyncStorage.removeItem("remembered_creds");
           }
-        } catch (e) {}
+        } catch (e) { }
 
         // Fetch role-based permissions from DB immediately after login
         try {
@@ -199,10 +199,23 @@ export default function LoginScreen() {
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
       {/* Background */}
-      <LinearGradient colors={[Theme.primary, "#1A1A1A"]} style={StyleSheet.absoluteFill}>
+      {/* <LinearGradient colors={[Theme.primary, "#1A1A1A"]} style={StyleSheet.absoluteFill}>
         <View style={[styles.bgCircle, styles.bgCircle1]} />
         <View style={[styles.bgCircle, styles.bgCircle2]} />
-      </LinearGradient>
+      </LinearGradient>*/}
+      {/* Car Wash Background */}
+      <ImageBackground
+        source={require("../assets/images/car_wash.png")}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+      >
+        <View
+          style={{
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: "rgba(5, 5, 5, 0.35)",
+          }}
+        />
+      </ImageBackground>
 
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
@@ -228,8 +241,8 @@ export default function LoginScreen() {
                 {/* Logo */}
                 <View style={[styles.logoWrap, isLandscape && { marginBottom: 15, flexDirection: 'row', gap: 15 }]}>
                   <View style={[styles.logoBadge, isLandscape && { width: 50, height: 50, borderRadius: 15, marginBottom: 0 }]}>
-                    <Image 
-                      source={require("../assets/images/logo_pos.png")} 
+                    <Image
+                      source={require("../assets/images/logo_pos.png")}
                       style={{ width: isLandscape ? 40 : 70, height: isLandscape ? 40 : 70, borderRadius: isLandscape ? 12 : 20 }}
                       resizeMode="contain"
                     />
@@ -299,7 +312,7 @@ export default function LoginScreen() {
                   </View>
 
                   {/* Remember Me */}
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.rememberRow}
                     onPress={() => setRememberMe(!rememberMe)}
                     activeOpacity={0.7}
@@ -341,36 +354,49 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: Theme.primary },
-  safeArea:       { flex: 1 },
-  keyboardView:   { flex: 1 },
-  scrollContent:  { flexGrow: 1 },
+  container: { flex: 1, backgroundColor: Theme.primary },
+  safeArea: { flex: 1 },
+  keyboardView: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
   centeredContent: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20, paddingVertical: 20 },
-  content:        { width: "100%", maxWidth: 440, alignItems: "center" },
+  content: { width: "100%", maxWidth: 440, alignItems: "center" },
 
-  bgCircle:   { position: "absolute", borderRadius: 999 },
-  bgCircle1:  { width: 300, height: 300, backgroundColor: "rgba(255,255,255,0.08)", top: -60, left: -60 },
-  bgCircle2:  { width: 420, height: 420, backgroundColor: "rgba(0,0,0,0.08)", bottom: -100, right: -80 },
+  bgCircle: { position: "absolute", borderRadius: 999 },
+  bgCircle1: { width: 300, height: 300, backgroundColor: "rgba(255,255,255,0.08)", top: -60, left: -60 },
+  bgCircle2: { width: 420, height: 420, backgroundColor: "rgba(0,0,0,0.08)", bottom: -100, right: -80 },
 
-  logoWrap:   { alignItems: "center", marginBottom: 28 },
-  logoBadge:  {
+  logoWrap: { alignItems: "center", marginBottom: 28 },
+  logoBadge: {
     width: 88, height: 88, borderRadius: 28,
     backgroundColor: "rgba(255,255,255,0.15)",
     justifyContent: "center", alignItems: "center",
     marginBottom: 14, borderWidth: 2, borderColor: "rgba(255,255,255,0.3)",
   },
-  appName:     { color: "#fff", fontSize: 28, fontFamily: Fonts.black, letterSpacing: -0.5 },
-  appTagline:  { color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: Fonts.medium, marginTop: 4 },
+  appName: { color: "#fff", fontSize: 28, fontFamily: Fonts.black, letterSpacing: -0.5 },
+  appTagline: { color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: Fonts.medium, marginTop: 4 },
 
   card: {
     width: "100%",
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(20, 20, 20, 0.78)",
     borderRadius: 28,
     padding: 28,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.25)",
     ...Theme.shadowLg,
   },
-  cardTitle:    { color: Theme.textPrimary, fontSize: 22, fontFamily: Fonts.black, marginBottom: 4 },
-  cardSubtitle: { color: Theme.textMuted, fontSize: 13, fontFamily: Fonts.medium, marginBottom: 20 },
+  cardTitle: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontFamily: Fonts.black,
+    marginBottom: 4,
+  },
+
+  cardSubtitle: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 13,
+    fontFamily: Fonts.medium,
+    marginBottom: 20,
+  },
 
   errorBanner: {
     flexDirection: "row", alignItems: "center", gap: 8,
@@ -380,17 +406,21 @@ const styles = StyleSheet.create({
   },
   errorText: { color: "#DC2626", fontSize: 13, fontFamily: Fonts.medium, flex: 1 },
 
-  inputGroup:  { marginBottom: 16 },
-  inputLabel:  { color: Theme.textSecondary, fontSize: 12, fontFamily: Fonts.bold, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 },
+  inputGroup: { marginBottom: 16 },
+  inputLabel: { color: "#FFFFFF", fontSize: 12, fontFamily: Fonts.bold, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 },
   inputRow: {
-    flexDirection: "row", alignItems: "center",
-    backgroundColor: Theme.bgMain, borderRadius: 14,
-    borderWidth: 1.5, borderColor: Theme.border,
-    paddingHorizontal: 14, height: 52,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.30)",
+    paddingHorizontal: 14,
+    height: 52,
   },
-  inputIcon:   { marginRight: 10 },
-  input:       { flex: 1, color: Theme.textPrimary, fontSize: 16, fontFamily: Fonts.medium, ...Platform.select({ web: { outlineStyle: "none" } as any }) },
-  eyeBtn:      { padding: 4 },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, color: "#FFFFFF", fontSize: 16, marginBottom: 8, fontFamily: Fonts.medium, ...Platform.select({ web: { outlineStyle: "none" } as any }) },
+  eyeBtn: { padding: 4 },
 
   button: {
     flexDirection: "row", justifyContent: "center", alignItems: "center",
@@ -398,10 +428,10 @@ const styles = StyleSheet.create({
     borderRadius: 16, marginTop: 8, ...Theme.shadowMd, shadowColor: Theme.primary,
   },
   buttonLoading: { opacity: 0.75 },
-  buttonText:    { color: "#fff", fontSize: 18, fontFamily: Fonts.black },
+  buttonText: { color: "#fff", fontSize: 18, fontFamily: Fonts.black },
 
-  rolesRow:   { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 20, justifyContent: "center" },
-  roleChip:   { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1 },
+  rolesRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 20, justifyContent: "center" },
+  roleChip: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1 },
   roleChipText: { fontSize: 10, fontFamily: Fonts.bold },
 
   footerText: { color: "rgba(255,255,255,0.5)", fontSize: 11, fontFamily: Fonts.medium, marginTop: 24 },
@@ -430,7 +460,7 @@ const styles = StyleSheet.create({
   rememberText: {
     fontSize: 14,
     fontFamily: Fonts.bold,
-    color: Theme.textSecondary,
+    color: "#FFFFFF",
   },
 });
 

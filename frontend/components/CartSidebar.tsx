@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Dimensions,
   DimensionValue,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -64,9 +65,9 @@ const isPhoneDevice = Math.min(Dimensions.get("window").width, Dimensions.get("w
 const styles = StyleSheet.create({
   container: {
     height: "100%",
-    backgroundColor: Theme.bgCard,
+    backgroundColor: "#11171D",
     borderLeftWidth: 1.5,
-    borderLeftColor: Theme.border,
+    borderLeftColor: "#303840",
     padding: isPhoneDevice ? 10 : 16,
     shadowColor: "#000",
     shadowOffset: { width: -8, height: 0 },
@@ -89,33 +90,27 @@ const styles = StyleSheet.create({
   },
   emptyCartIconPulse: {
     position: "absolute",
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: Theme.primary + "10",
+    width: 0,
+    height: 0,
+    backgroundColor: "transparent",
   },
   emptyCartIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#fff",
+    width: 140,
+    height: 140,
     justifyContent: "center",
     alignItems: "center",
-    ...Theme.shadowMd,
-    borderWidth: 1,
-    borderColor: Theme.primary + "10",
   },
   emptyCartTitle: {
     fontFamily: Fonts.extraBold,
     fontSize: 22,
-    color: Theme.textPrimary,
+    color: "#FFFFFF",
     marginBottom: 12,
     textAlign: "center",
   },
   emptyCartSubtitle: {
     fontFamily: Fonts.medium,
     fontSize: 14,
-    color: Theme.textMuted,
+    color: "#8995A3",
     textAlign: "center",
     lineHeight: 20,
   },
@@ -133,7 +128,7 @@ const styles = StyleSheet.create({
   tableIdentityText: {
     fontSize: 16,
     fontFamily: Fonts.extraBold,
-    color: Theme.textPrimary,
+    color: "#FFFFFF",
     textTransform: "uppercase",
   },
   headerIcons: { flexDirection: "row", gap: 8 },
@@ -141,27 +136,27 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: Theme.bgMuted,
+    backgroundColor: "#171D23",
     justifyContent: "center",
     alignItems: "center",
   },
   listContent: { paddingBottom: 20 },
   itemContainer: {
-    marginBottom: 12,
+    marginBottom: 5,
     borderWidth: 1,
-    borderColor: Theme.border + "80", // Softer border
-    borderRadius: 16,
-    backgroundColor: "#fff",
+    borderColor: "#303840" + "80",
+    borderRadius: 6,
+    backgroundColor: "#151B21",
     overflow: "hidden",
     flexDirection: "row",
     ...Theme.shadowSm,
-    borderBottomWidth: 2, // Slight dimensional feel
-    borderBottomColor: Theme.border + "40",
+    borderBottomWidth: 1,
+    borderBottomColor: "#303840" + "40",
   },
   itemExpanded: {
-    backgroundColor: Theme.bgMuted + "50",
+    backgroundColor: "#171D23" + "50",
     borderWidth: 1,
-    borderColor: Theme.border,
+    borderColor: "#303840",
   },
   statusBar: { width: 4, height: "100%" },
   itemHeader: {
@@ -183,14 +178,14 @@ const styles = StyleSheet.create({
   itemIndex: {
     fontSize: 13,
     fontFamily: Fonts.black,
-    color: Theme.textPrimary,
+    color: "#FFFFFF",
   },
   itemInfo: { flex: 1, paddingRight: 4 },
   itemMainRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   itemName: {
     fontSize: 13,
     fontFamily: Fonts.bold,
-    color: Theme.textPrimary,
+    color: "#FFFFFF",
     flex: 1,
   },
   statusTag: {
@@ -208,7 +203,7 @@ const styles = StyleSheet.create({
   modifierTextSmall: {
     fontSize: 10,
     fontFamily: Fonts.medium,
-    color: Theme.textSecondary,
+    color: "#AAB4C0",
     lineHeight: 14,
   },
   inlineControls: {
@@ -220,12 +215,12 @@ const styles = StyleSheet.create({
   sentQtyText: {
     fontSize: 12,
     fontFamily: Fonts.black,
-    color: Theme.textSecondary,
+    color: "#AAB4C0",
   },
   qtyControlSmall: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Theme.bgMuted,
+    backgroundColor: "#111010ff",
     borderRadius: 8,
     padding: 2,
   },
@@ -234,7 +229,7 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#151B21",
     borderRadius: 6,
     ...Theme.shadowSm,
   },
@@ -242,23 +237,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 13,
     fontFamily: Fonts.extraBold,
-    color: Theme.textPrimary,
+    color: "#FFFFFF",
   },
   priceContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
   itemPrice: {
     fontSize: 14,
     fontFamily: Fonts.extraBold,
-    color: Theme.primary,
+    color: "#ffffffff",
     minWidth: 60,
     textAlign: "right",
   },
   deleteBtn: { padding: 4, marginLeft: 4 },
-  textMuted: { color: Theme.textMuted },
+  textMuted: { color: "#8995A3" },
   discountRow: {
     padding: 10,
-    backgroundColor: Theme.bgMain + "30",
+    backgroundColor: "#151B21" + "30",
     borderTopWidth: 1,
-    borderTopColor: Theme.border + "50",
+    borderTopColor: "#303840" + "50",
   },
   discountInputWrap: {
     flexDirection: "row",
@@ -268,25 +263,25 @@ const styles = StyleSheet.create({
   discountLabel: {
     fontSize: 11,
     fontFamily: Fonts.bold,
-    color: Theme.textMuted,
+    color: "#8995A3",
   },
   discountInputSmall: {
     width: 60,
     height: 32,
-    backgroundColor: "#fff",
+    backgroundColor: "#151B21",
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: Theme.border,
+    borderColor: "#303840",
     textAlign: "center",
     fontSize: 12,
     fontFamily: Fonts.black,
     ...Platform.select({ web: { outlineStyle: "none" } as any }),
   },
-  footer: { borderTopWidth: 1, borderTopColor: Theme.border, paddingTop: 16 },
+  footer: { borderTopWidth: 1, borderTopColor: "#303840", paddingTop: 16 },
   addBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Theme.primaryLight,
+    backgroundColor: "rgba(255,107,0,0.15)",
     padding: 10,
     borderRadius: 10,
     marginBottom: 16,
@@ -294,11 +289,11 @@ const styles = StyleSheet.create({
   addLabel: {
     fontSize: 12,
     fontFamily: Fonts.black,
-    color: Theme.primary,
+    color: "#FF6B00",
     marginRight: 15,
   },
   addActions: { flex: 1, flexDirection: "row", gap: 15 },
-  addBtnText: { fontSize: 12, fontFamily: Fonts.bold, color: Theme.primary },
+  addBtnText: { fontSize: 12, fontFamily: Fonts.bold, color: "#FF6B00" },
   summary: { gap: 6, marginBottom: 20 },
   summaryRow: {
     flexDirection: "row",
@@ -308,28 +303,28 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 13,
     fontFamily: Fonts.medium,
-    color: Theme.textSecondary,
+    color: "#AAB4C0",
   },
   summaryValue: {
     fontSize: 14,
     fontFamily: Fonts.black,
-    color: Theme.textPrimary,
+    color: "#FFFFFF",
   },
   summaryDivider: {
     height: 1,
-    backgroundColor: Theme.border,
+    backgroundColor: "#303840",
     marginVertical: 10,
     opacity: 0.5,
   },
   payableLabel: {
     fontSize: 15,
     fontFamily: Fonts.black,
-    color: Theme.textPrimary,
+    color: "#FFFFFF",
   },
   payableValue: {
     fontSize: 20,
     fontFamily: Fonts.black,
-    color: Theme.textPrimary,
+    color: "#FFFFFF",
   },
   actions: { flexDirection: "row", gap: isPhoneDevice ? 6 : 10 },
   holdBtn: {
@@ -346,7 +341,7 @@ const styles = StyleSheet.create({
   proceedBtn: {
     flex: 1.1,
     height: 50,
-    backgroundColor: "#F59E0B",
+    backgroundColor: "#e98800ff",
     borderRadius: 12,
     flexDirection: "row",
     alignItems: "center",
@@ -362,7 +357,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     ...Theme.shadowMd,
   },
-  btnText: { color: "#fff", fontFamily: Fonts.black, fontSize: isPhoneDevice ? 13 : 15 },
+  btnText: { color: "#FFFFFF", fontFamily: Fonts.black, fontSize: isPhoneDevice ? 13 : 15, textAlign: "center" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -370,7 +365,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: Theme.bgCard,
+    backgroundColor: "#11171D",
     padding: 24,
     borderRadius: 20,
     width: 300,
@@ -378,7 +373,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontFamily: Fonts.black, marginBottom: 15 },
   modalInput: {
     borderWidth: 1,
-    borderColor: Theme.border,
+    borderColor: "#303840",
     borderRadius: 10,
     padding: 12,
     marginBottom: 20,
@@ -386,14 +381,14 @@ const styles = StyleSheet.create({
   },
   modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 10 },
   modalBtnCancel: { padding: 10 },
-  modalBtnTextCancel: { color: Theme.textSecondary, fontFamily: Fonts.bold },
+  modalBtnTextCancel: { color: "#AAB4C0", fontFamily: Fonts.bold },
   modalBtnConfirm: {
     backgroundColor: Theme.danger,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
   },
-  modalBtnTextConfirm: { color: "#fff", fontFamily: Fonts.black },
+  modalBtnTextConfirm: { color: "#151B21", fontFamily: Fonts.black },
   twBadge: {
     backgroundColor: Theme.danger + "15",
     paddingHorizontal: 6,
@@ -446,13 +441,13 @@ const styles = StyleSheet.create({
   },
   orderIdLabel: {
     fontSize: 10,
-    color: Theme.textSecondary,
+    color: "#AAB4C0",
     fontFamily: Fonts.bold,
     marginTop: 2,
     opacity: 0.8,
   },
   sentLabel: {
-    backgroundColor: Theme.bgMuted,
+    backgroundColor: "#171D23",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -466,7 +461,7 @@ const styles = StyleSheet.create({
   syncText: {
     fontSize: 10,
     fontFamily: Fonts.bold,
-    color: Theme.primary,
+    color: "#FF6B00",
   },
   voidQtyWrap: {
     marginBottom: 10,
@@ -474,7 +469,7 @@ const styles = StyleSheet.create({
   voidQtyLabel: {
     fontSize: 12,
     fontFamily: Fonts.bold,
-    color: Theme.textSecondary,
+    color: "#AAB4C0",
     marginBottom: 4,
   },
 });
@@ -565,11 +560,6 @@ const CartItemRow = React.memo(
     return (
       <View style={[
         styles.itemContainer,
-        isSC && {
-          borderWidth: 1.5,
-          borderColor: Theme.dangerBorder,
-          backgroundColor: Theme.dangerBg,
-        }
       ]}>
         <View
           style={[
@@ -586,7 +576,7 @@ const CartItemRow = React.memo(
               <Ionicons
                 name="chevron-forward"
                 size={12}
-                color={Theme.textMuted}
+                color={"#8995A3"}
                 style={styles.chevron}
               />
               <Text style={styles.itemIndex}>{index + 1}.</Text>
@@ -719,7 +709,7 @@ const CartItemRow = React.memo(
                   .filter((group: any) => group.items && group.items.length > 0)
                   .map((group: any, gIdx: number) => (
                     <View key={`g-${gIdx}`} style={{ marginTop: 2, paddingLeft: 2 }}>
-                      <Text style={[styles.modifierTextSmall, { fontFamily: Fonts.bold, color: Theme.primary }]}>
+                      <Text style={[styles.modifierTextSmall, { fontFamily: Fonts.bold, color: "#FF6B00" }]}>
                         {group.groupName}:
                       </Text>
                       {(group.items || []).map((opt: any, oIdx: number) => {
@@ -781,9 +771,9 @@ const CartItemRow = React.memo(
                     style={[
                       styles.qtyControlSmall,
                       isPhone && {
-                        backgroundColor: Theme.bgCard,
+                        backgroundColor: "#11171D",
                         borderWidth: 1,
-                        borderColor: Theme.border,
+                        borderColor: "#303840",
                       },
                     ]}
                   >
@@ -800,7 +790,7 @@ const CartItemRow = React.memo(
                       <Ionicons
                         name="remove"
                         size={isPhone ? 20 : 18}
-                        color={Theme.primary}
+                        color={"#FF6B00"}
                       />
                     </TouchableOpacity>
                     <Text
@@ -824,7 +814,7 @@ const CartItemRow = React.memo(
                       <Ionicons
                         name="add"
                         size={isPhone ? 20 : 18}
-                        color={Theme.primary}
+                        color={"#FF6B00"}
                       />
                     </TouchableOpacity>
                   </View>
@@ -844,7 +834,7 @@ const CartItemRow = React.memo(
                         <Ionicons
                           name="trash-outline"
                           size={18}
-                          color={Theme.textMuted}
+                          color={"#8995A3"}
                         />
                       )}
                     </TouchableOpacity>
@@ -867,7 +857,7 @@ const CartItemRow = React.memo(
                         {
                           fontSize: isPhone ? 10 : 11,
                           textDecorationLine: "line-through",
-                          color: Theme.textMuted,
+                          color: "#8995A3",
                           minWidth: 0,
                         },
                       ]}
@@ -1179,19 +1169,6 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
     // 🔥 If the cart is completely empty (no unsent items AND no active order items),
     // and we have a table context, reset the table status to Available (0) in the DB.
     const ctx = orderContext;
-    if (ctx?.tableId && false && displayItems.length === 0) {
-      console.log(
-        `🧹 [CartSidebar] Cart empty, resetting table ${ctx?.tableId}`,
-      );
-      fetch(`${API_URL}/api/orders/save-cart`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tableId: ctx?.tableId,
-          items: [],
-        }),
-      }).catch((err) => console.error("Error auto-resetting table:", err));
-    }
   }, [displayItems.length, orderContext?.tableId]);
 
   const takeawayCharges = settings.takeawayCharges || 0;
@@ -1223,7 +1200,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
         const itemSubtotal = baseTotal - itemDiscount;
         const isTakeawayItem = item.isTakeaway || item.IsTakeaway || item.isTakeAway || item.IsTakeAway;
         const isSC = !isTakeawayItem && (Number(item.isServiceCharge) === 1 || item.isServiceCharge === true);
-        
+
         let itemTWCharge = 0;
         if (isTakeawayItem) {
           const dishSpecificTW = Number(item.takeawayCharge ?? item.TakeawayCharge ?? 0);
@@ -1295,16 +1272,24 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
             <View
               style={[
                 styles.emptyCartIconPulse,
-                { backgroundColor: Theme.border + "40" },
+                { backgroundColor: "#303840" + "40" },
               ]}
             />
+
             <View
               style={[
                 styles.emptyCartIconContainer,
-                { borderColor: Theme.border },
+                { borderColor: "#303840" },
               ]}
             >
-              <Ionicons name="cart-outline" size={48} color={Theme.textMuted} />
+              <Image
+                source={require("../assets/images/car_wash.png")}
+                style={{
+                  width: 80,
+                  height: 80,
+                  resizeMode: "contain",
+                }}
+              />
             </View>
           </View>
           <Text style={styles.emptyCartTitle}>No Active Order</Text>
@@ -1406,7 +1391,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
         undefined,
         payableAmount,
       );
-    } catch (_) {}
+    } catch (_) { }
 
     try {
       // 🚀 TURBO PRINT: Start printing immediately
@@ -1462,7 +1447,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
           try {
             const res = await useCartStore.getState().checkoutOrder(tableId);
             if (res && res.success) {
-              useActiveOrdersStore.getState().fetchActiveKitchenOrders().catch(() => {});
+              useActiveOrdersStore.getState().fetchActiveKitchenOrders().catch(() => { });
             }
           } catch (e) {
             console.error("Background checkout failed:", e);
@@ -1491,13 +1476,13 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
         try {
           const res = await useCartStore.getState().checkoutOrder(tableId);
           if (res && res.success) {
-            useActiveOrdersStore.getState().fetchActiveKitchenOrders().catch(() => {});
+            useActiveOrdersStore.getState().fetchActiveKitchenOrders().catch(() => { });
             // Broadcast new order to sync KDS screens instantly via sockets
-            socket.emit("new_order", { 
-              orderId: currentOrderId, 
-              context: orderContext, 
+            socket.emit("new_order", {
+              orderId: currentOrderId,
+              context: orderContext,
               items: cart.filter((i: any) => i.status !== "VOIDED" && i.statusCode !== 0),
-              createdAt: Date.now() 
+              createdAt: Date.now()
             });
           }
         } catch (e) {
@@ -1661,7 +1646,10 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
       <View style={styles.emptyCartIconWrap}>
         <View style={styles.emptyCartIconPulse} />
         <View style={styles.emptyCartIconContainer}>
-          <Ionicons name="fast-food-outline" size={48} color={Theme.primary} />
+          <Image
+            source={require("../assets/images/car_wash.png")}
+            style={{ width: 100, height: 100, resizeMode: "contain" }}
+          />
         </View>
       </View>
       <Text style={styles.emptyCartTitle}>Empty Cart</Text>
@@ -1796,7 +1784,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
         )}
         {pendingSync && (
           <View style={styles.syncBadge}>
-            <ActivityIndicator size="small" color={Theme.primary} />
+            <ActivityIndicator size="small" color={"#FF6B00"} />
             <Text style={styles.syncText}>Syncing...</Text>
           </View>
         )}
@@ -1994,7 +1982,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                               <Ionicons
                                 name="pause-circle-outline"
                                 size={iconSize}
-                                color="#fff"
+                                color="#FFFFFF"
                               />
                               <Text style={styles.btnText}>Hold Cart</Text>
                             </TouchableOpacity>
@@ -2020,10 +2008,10 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                               }}
                             >
                               {isCheckingOut ? (
-                                <ActivityIndicator size="small" color="#fff" />
+                                <ActivityIndicator size="small" color="#FFFFFF" />
                               ) : (
                                 <>
-                                  <Ionicons name="send" size={iconSize} color="#fff" />
+                                  <Ionicons name="send" size={iconSize} color="#FFFFFF" />
                                   <Text style={styles.btnText}>Send to Kitchen</Text>
                                 </>
                               )}
@@ -2112,7 +2100,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                             <Ionicons
                               name="pause-outline"
                               size={iconSize}
-                              color="#fff"
+                              color="#FFFFFF"
                             />
                           </TouchableOpacity>
 
@@ -2132,7 +2120,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                               try {
                                 // 🚀 Auto-trigger sending to kitchen/printing KOT in background
                                 await handleSendOrder(true);
-                                
+
                                 // 🚀 Print checkout bill if Checkout Bill setting is ON
                                 if (enableCheckoutBill) {
                                   try {
@@ -2185,10 +2173,10 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                             }}
                           >
                             {isCheckingOut ? (
-                              <ActivityIndicator size="small" color="#fff" />
+                              <ActivityIndicator size="small" color="#FFFFFF" />
                             ) : (
                               <>
-                                <Ionicons name="card-outline" size={iconSize} color="#fff" />
+                                <Ionicons name="card-outline" size={iconSize} color="#FFFFFF" />
                                 <Text style={styles.btnText}>Proceed to Pay</Text>
                               </>
                             )}
@@ -2202,7 +2190,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                           disabled={isCheckingOut}
                           style={[
                             styles.proceedBtn,
-                            { flex: 1, backgroundColor: enableDirectPaymentToProcess ? Theme.primary : "#10B981" },
+                            { flex: 1, backgroundColor: enableDirectPaymentToProcess ? "#FF6B00" : "#10B981" },
                             isCheckingOut && { opacity: 0.6 }
                           ]}
                           onPress={() => {
@@ -2214,10 +2202,10 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                           }}
                         >
                           {isCheckingOut ? (
-                            <ActivityIndicator size="small" color="#fff" />
+                            <ActivityIndicator size="small" color="#FFFFFF" />
                           ) : (
                             <>
-                              <Ionicons name="card-outline" size={iconSize} color="#fff" />
+                              <Ionicons name="card-outline" size={iconSize} color="#FFFFFF" />
                               <Text style={styles.btnText}>Proceed to Pay</Text>
                             </>
                           )}
@@ -2230,7 +2218,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                           disabled={isCheckingOut}
                           style={[
                             styles.proceedBtn,
-                            { flex: 1, backgroundColor: enableDirectPaymentToProcess ? Theme.primary : "#10B981" },
+                            { flex: 1, backgroundColor: enableDirectPaymentToProcess ? "#FF6B00" : "#10B981" },
                             isCheckingOut && { opacity: 0.6 }
                           ]}
                           onPress={() => {
@@ -2242,10 +2230,10 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                           }}
                         >
                           {isCheckingOut ? (
-                            <ActivityIndicator size="small" color="#fff" />
+                            <ActivityIndicator size="small" color="#FFFFFF" />
                           ) : (
                             <>
-                              <Ionicons name="card-outline" size={iconSize} color="#fff" />
+                              <Ionicons name="card-outline" size={iconSize} color="#FFFFFF" />
                               <Text style={styles.btnText}>Proceed to Pay</Text>
                             </>
                           )}
@@ -2266,7 +2254,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                           <Ionicons
                             name="card-outline"
                             size={iconSize}
-                            color="#fff"
+                            color="#FFFFFF"
                           />
                           <Text style={styles.btnText}>Proceed to Pay</Text>
                         </TouchableOpacity>
@@ -2344,10 +2332,10 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                             }}
                           >
                             {isCheckingOut ? (
-                              <ActivityIndicator size="small" color="#fff" />
+                              <ActivityIndicator size="small" color="#FFFFFF" />
                             ) : (
                               <>
-                                <Ionicons name="card-outline" size={iconSize} color="#fff" />
+                                <Ionicons name="card-outline" size={iconSize} color="#FFFFFF" />
                                 <Text style={styles.btnText}>Proceed to Pay</Text>
                               </>
                             )}
@@ -2360,7 +2348,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                           disabled={isCheckingOut}
                           style={[
                             styles.proceedBtn,
-                            { flex: 1, backgroundColor: enableDirectPaymentToProcess ? Theme.primary : "#10B981" },
+                            { flex: 1, backgroundColor: enableDirectPaymentToProcess ? "#FF6B00" : "#10B981" },
                             isCheckingOut && { opacity: 0.6 }
                           ]}
                           onPress={() => {
@@ -2372,10 +2360,10 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                           }}
                         >
                           {isCheckingOut ? (
-                            <ActivityIndicator size="small" color="#fff" />
+                            <ActivityIndicator size="small" color="#FFFFFF" />
                           ) : (
                             <>
-                              <Ionicons name="card-outline" size={iconSize} color="#fff" />
+                              <Ionicons name="card-outline" size={iconSize} color="#FFFFFF" />
                               <Text style={styles.btnText}>Proceed to Pay</Text>
                             </>
                           )}
@@ -2465,7 +2453,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                         <Ionicons
                           name="pause-circle-outline"
                           size={iconSize}
-                          color="#fff"
+                          color="#FFFFFF"
                         />
                         {!isPhone && <Text style={styles.btnText}>Hold Cart</Text>}
                       </TouchableOpacity>
@@ -2559,7 +2547,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                         }}
                       >
                         {isCheckingOut ? (
-                          <ActivityIndicator size="small" color="#fff" />
+                          <ActivityIndicator size="small" color="#FFFFFF" />
                         ) : (
                           <>
                             <Ionicons
@@ -2571,7 +2559,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                                     : "receipt-outline"
                               }
                               size={iconSize}
-                              color="#fff"
+                              color="#FFFFFF"
                             />
                             <Text style={styles.btnText}>
                               {(enableCheckoutFlow === true && enableDirectProcessToPay === false)
@@ -2597,15 +2585,15 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                             styles.proceedBtn,
                             {
                               flex: 1,
-                              backgroundColor: isCheckingOut ? Theme.border : "#F59E0B",
+                              backgroundColor: isCheckingOut ? "#303840" : "#F59E0B",
                             },
                           ]}
                           onPress={() => handleCheckout()}
                         >
                           {isCheckingOut ? (
-                            <ActivityIndicator size="small" color="#fff" />
+                            <ActivityIndicator size="small" color="#FFFFFF" />
                           ) : (
-                            <Ionicons name="receipt-outline" size={iconSize} color="#fff" />
+                            <Ionicons name="receipt-outline" size={iconSize} color="#FFFFFF" />
                           )}
                           <Text style={styles.btnText}>
                             {isCheckingOut ? "Checking out..." : (enableDirectPaymentToProcess ? "Proceed to Pay" : "Checkout")}
@@ -2620,7 +2608,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                             styles.proceedBtn,
                             {
                               flex: 1,
-                              backgroundColor: enableDirectPaymentToProcess ? Theme.primary : "#10B981",
+                              backgroundColor: enableDirectPaymentToProcess ? "#FF6B00" : "#10B981",
                             },
                             isCheckingOut && { opacity: 0.6 }
                           ]}
@@ -2633,10 +2621,10 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                           }}
                         >
                           {isCheckingOut ? (
-                            <ActivityIndicator size="small" color="#fff" />
+                            <ActivityIndicator size="small" color="#FFFFFF" />
                           ) : (
                             <>
-                              <Ionicons name="card-outline" size={iconSize} color="#fff" />
+                              <Ionicons name="card-outline" size={iconSize} color="#FFFFFF" />
                               <Text style={styles.btnText}>Proceed to Pay</Text>
                             </>
                           )}
@@ -2656,7 +2644,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                             router.push(enableSkipSummaryScreen ? "/payment" : "/summary");
                           }}
                         >
-                          <Ionicons name="card-outline" size={iconSize} color="#fff" />
+                          <Ionicons name="card-outline" size={iconSize} color="#FFFFFF" />
                           <Text style={styles.btnText}>Process to Pay</Text>
                         </TouchableOpacity>
                       )}
@@ -2669,7 +2657,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                     <TouchableOpacity
                       style={[
                         styles.proceedBtn,
-                        { flex: 1, backgroundColor: Theme.primary },
+                        { flex: 1, backgroundColor: "#FF6B00" },
                       ]}
                       onPress={() => {
                         if (enableCheckoutFlow !== false) {
@@ -2682,7 +2670,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                       <Ionicons
                         name="arrow-forward-circle-outline"
                         size={iconSize}
-                        color="#fff"
+                        color="#FFFFFF"
                       />
                       <Text style={styles.btnText}>Proceed to Pay</Text>
                     </TouchableOpacity>
@@ -2707,7 +2695,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                       <Ionicons
                         name="card-outline"
                         size={iconSize}
-                        color="#fff"
+                        color="#FFFFFF"
                       />
                       <Text style={styles.btnText}>Process to Pay</Text>
                     </TouchableOpacity>
@@ -2753,7 +2741,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
               const token = useAuthStore.getState().token;
               const res = await fetch(`${API_URL}/api/orders/remove-item`, {
                 method: "POST",
-                headers: { 
+                headers: {
                   "Content-Type": "application/json",
                   ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },

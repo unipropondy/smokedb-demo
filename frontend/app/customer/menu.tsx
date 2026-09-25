@@ -737,14 +737,27 @@ export default function CustomerMenuScreen() {
       Alert.alert("Sold Out", `${dish.Name} is currently unavailable.`);
       return;
     }
+
+    // If IsCombo = 1, ALWAYS open the Combo/Modifier selection screen.
+    // This must be checked first, unconditionally — before the modifier cache,
+    // because the cache may not yet be loaded when the user taps.
     const isCombo = dish.isCombo === true || String(dish.isCombo) === "1" || dish.isCombo === 1 || dish.IsCombo === true || String(dish.IsCombo) === "1" || dish.IsCombo === 1;
+    if (isCombo) {
+      router.push({
+        pathname: "/customer/item-details" as any,
+        params: { dishId: dish.DishId || dish.id },
+      });
+      return;
+    }
+
+    // For non-combo items, check modifier cache to decide whether customization is needed.
     const modifiers = modifierCache[dish.DishId || dish.id] || [];
     const hasModifiers = modifiers.length > 0 || Number(dish.HasModifiers) > 0;
 
-    if (isCombo || hasModifiers) {
+    if (hasModifiers) {
       router.push({
         pathname: "/customer/item-details" as any,
-        params: { dishId: dish.DishId },
+        params: { dishId: dish.DishId || dish.id },
       });
     } else {
       addToCartGlobal({

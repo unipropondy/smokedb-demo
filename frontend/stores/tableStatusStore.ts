@@ -16,6 +16,7 @@ export type TableStatus = {
   entryStatus?: string;
   paymentStatus?: number;
   customerName?: string;
+  carNumber?: string;
   pax?: number;
 };
 

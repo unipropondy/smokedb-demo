@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: Theme.primary, // Brand Orange
+    backgroundColor: Theme.primary, // Brand Primary
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,

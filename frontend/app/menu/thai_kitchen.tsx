@@ -1,6 +1,7 @@
 import { API_URL } from "@/constants/Config";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -21,17 +22,16 @@ import {
   useWindowDimensions,
   View
 } from "react-native";
-import { Image } from "expo-image";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import CartSidebar from "../../components/CartSidebar";
 import ComboCustomizer from "../../components/ComboCustomizer";
-import WindowControls from "../../components/WindowControls";
 import { useToast } from "../../components/Toast";
 import { Skeleton } from "../../components/ui/Skeleton";
 import UniversalPrinter from "../../components/UniversalPrinter";
+import WindowControls from "../../components/WindowControls";
 import { Fonts } from "../../constants/Fonts";
 import { Theme } from "../../constants/theme";
 import { useAuthStore } from "../../stores/authStore";
@@ -100,139 +100,112 @@ const NavRail = () => {
 };
 
 const DishCard = React.memo(
-  ({ dish, width, cartQty, onPress, isPhone, isTablet, isLandscape }: any) => {
-    const isSC = (Number(dish.isServiceCharge) === 1 || dish.isServiceCharge === true) && useGeneralSettingsStore.getState().settings.SVCIdentification !== false;
-    const isSoldOut = dish.IsSoldOut === true || String(dish.IsSoldOut) === "1" || dish.IsSoldOut === 1 || dish.isSoldOut === true || String(dish.isSoldOut) === "1" || dish.isSoldOut === 1;
+  ({
+    dish,
+    width,
+    cartQty,
+    onPress,
+    isPhone,
+    isTablet,
+    isLandscape,
+  }: any) => {
+    const isSC =
+      (Number(dish.isServiceCharge) === 1 ||
+        dish.isServiceCharge === true) &&
+      useGeneralSettingsStore.getState().settings.SVCIdentification !== false;
+
+    const isSoldOut =
+      dish.IsSoldOut === true ||
+      String(dish.IsSoldOut) === "1" ||
+      dish.IsSoldOut === 1 ||
+      dish.isSoldOut === true ||
+      String(dish.isSoldOut) === "1" ||
+      dish.isSoldOut === 1;
+
+    const isOpenItem =
+      Number(dish.IsOpenItem) === 1 ||
+      dish.IsOpenItem === true ||
+      dish.IsOpenItem === "true" ||
+      dish.IsOpenItem === "1";
+
     return (
       <Pressable
         style={({ pressed }: { pressed: boolean }) => [
           styles.card,
-          { width, padding: isPhone ? 8 : isTablet ? 12 : 10 },
-          isLandscape && !isTablet && { maxHeight: 135 },
-          isSC && {
-            borderWidth: 1.5,
-            borderColor: Theme.dangerBorder,
-            backgroundColor: Theme.dangerBg,
+          {
+            width,
+            padding: 10,
+            backgroundColor: "#151B21",
+            borderRadius: 18,
+            borderWidth: 1,
+            borderColor: isSC ? Theme.dangerBorder : "#e0e0dfff",
+            overflow: "hidden",
+            marginBottom: 4,
+            flexDirection: "column",
           },
-          isSoldOut && { opacity: 0.5 },
-          pressed && !isSoldOut && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+          isSoldOut && { opacity: 0.55 },
+          pressed && !isSoldOut && { opacity: 0.9, transform: [{ scale: 0.98 }] },
         ]}
         onPress={() => {
-          if (isSoldOut) {
-            alert(`${dish.Name} is Sold Out!`);
-            return;
-          }
+          if (isSoldOut) { alert(`${dish.Name} is Sold Out!`); return; }
           onPress(dish);
         }}
         disabled={isSoldOut}
       >
+        {/* CART QUANTITY BADGE */}
         {cartQty > 0 && (
-          <View
-            style={[
-              styles.qtyBadge,
-              isPhone
-                ? { width: 22, height: 22, borderRadius: 11 }
-                : isTablet
-                  ? { width: 32, height: 32, borderRadius: 16 }
-                  : null,
-            ]}
-          >
-            <Text
-              style={[
-                styles.qtyBadgeText,
-                isPhone ? { fontSize: 11 } : isTablet ? { fontSize: 15 } : null,
-              ]}
-            >
-              {cartQty}
-            </Text>
+          <View style={{ position: "absolute", top: 8, right: 8, zIndex: 20, minWidth: 27, height: 27, borderRadius: 14, backgroundColor: "#FF6B00", justifyContent: "center", alignItems: "center", paddingHorizontal: 6, elevation: 5 }}>
+            <Text style={{ color: "#FFFFFF", fontSize: 12, fontFamily: Fonts.bold }}>{cartQty}</Text>
           </View>
         )}
-        <View
-          style={[
-            styles.dishImageWrap,
-            isPhone
-              ? { width: 48, height: 48, marginBottom: 4 }
-              : isTablet
-                ? {
-                  width: 75,
-                  height: 75,
-                  marginBottom: 6,
-                  borderRadius: 37.5,
-                }
-                : null,
-          ]}
-        >
+
+        {/* DISH IMAGE */}
+        <View style={{ width: "100%", height: isPhone ? (isLandscape ? 75 : 95) : (isTablet ? 110 : 120), borderRadius: 13, overflow: "hidden", backgroundColor: "#202830", marginBottom: 10 }}>
           {dish.Image ? (
-            <Image
-              source={{ uri: `${IMAGE_BASE_URL}${dish.Image}` }}
-              style={styles.dishImg}
-              contentFit="cover"
-              transition={150}
-            />
+            <Image source={{ uri: `${IMAGE_BASE_URL}${dish.Image}` }} style={{ width: "100%", height: "100%" }} contentFit="cover" transition={150} />
           ) : (
-            <View
-              style={[
-                styles.dishImg,
-                {
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: Theme.bgMuted,
-                },
-              ]}
-            >
-              <Ionicons
-                name="restaurant-outline"
-                size={isPhone ? (isLandscape ? 16 : 24) : isTablet ? 48 : 40}
-                color={Theme.textMuted}
-              />
+            <View style={{ width: "100%", height: "100%", justifyContent: "center", alignItems: "center", backgroundColor: "#202830" }}>
+              <Ionicons name="restaurant-outline" size={isPhone ? 35 : 48} color="#7F8A96" />
             </View>
           )}
           {isSoldOut && (
-            <View style={{
-              position: "absolute",
-              top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: isPhone ? 24 : 37.5,
-            }}>
-              <Text style={{
-                color: "#fff",
-                fontSize: isPhone ? 8 : 10,
-                fontFamily: Fonts.bold,
-                textAlign: "center"
-              }}>SOLD OUT</Text>
+            <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.58)", justifyContent: "center", alignItems: "center" }}>
+              <Text style={{ color: "#FFFFFF", fontSize: 14, fontFamily: Fonts.bold }}>SOLD OUT</Text>
             </View>
           )}
         </View>
-        <Text
-          style={[
-            styles.dishName,
-            isPhone
-              ? { fontSize: 11, minHeight: 42, lineHeight: 14 }
-              : isTablet
-                ? { fontSize: 13, minHeight: 48, lineHeight: 16 }
-                : null,
-          ]}
-          numberOfLines={3}
-        >
+
+        {/* DISH NAME - single line, fixed height */}
+        <Text style={{ color: "#FFFFFF", fontSize: isPhone ? 12 : 13, fontFamily: Fonts.bold, textAlign: "left", marginBottom: 4, height: isPhone ? 18 : 20 }} numberOfLines={1}>
           {dish.Name}
         </Text>
-        <Text
-          style={[
-            styles.dishPrice,
-            isPhone ? { fontSize: 12 } : isTablet ? { fontSize: 14 } : null,
-          ]}
-        >
-          {(Number(dish.IsOpenItem) === 1 || dish.IsOpenItem === true || dish.IsOpenItem === 'true' || dish.IsOpenItem === '1') ? "Open Price" : `$${(dish.Price || 0).toFixed(2)}`}
-        </Text>
+
+        {/* DESCRIPTION - hidden as requested */}
+        {/*
+        <View style={{ height: isPhone ? 34 : 38, marginBottom: 6 }}>
+          <Text style={{ color: "#AAB4C0", fontSize: isPhone ? 11 : 12, lineHeight: isPhone ? 17 : 19, textAlign: "left" }} numberOfLines={2}>
+            {dish.Description || ""}
+          </Text>
+        </View>
+        */}
+
+
+
+        {/* PRICE */}
+        <View style={{ height: isPhone ? 42 : 46, borderRadius: 12, flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+          <Text style={{ flex: 1, color: "#FF6B00", fontSize: isPhone ? 13 : 14, fontFamily: Fonts.bold }}>
+            {isOpenItem ? "Open Price" : `$${Number(dish.Price || 0).toFixed(2)}`}
+          </Text>
+        </View>
+
+        {/* STATUS BADGES */}
         {isSoldOut ? (
-          <View style={{ backgroundColor: "#EF444422", borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1, marginTop: 2, borderWidth: 1, borderColor: "#EF444444", alignSelf: "center" }}>
+          <View style={{ alignSelf: "flex-start", backgroundColor: "#3A1D1D", borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3, marginTop: 6, borderWidth: 1, borderColor: "#EF4444" }}>
             <Text style={{ fontSize: 9, color: "#EF4444", fontFamily: Fonts.bold }}>SOLD OUT</Text>
           </View>
-        ) : (Number(dish.IsOpenItem) === 1 || dish.IsOpenItem === true || dish.IsOpenItem === 'true' || dish.IsOpenItem === '1') ? (
-          <View style={{ backgroundColor: "#F59E0B22", borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1, marginTop: 2, borderWidth: 1, borderColor: "#F59E0B44", alignSelf: "center" }}>
-            <Text style={{ fontSize: 9, color: "#B45309", fontFamily: Fonts.bold }}>OPEN</Text>
+        ) : isOpenItem ? (
+          <View style={{ alignSelf: "flex-start", backgroundColor: "#3A2A16", borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3, marginTop: 6, borderWidth: 1, borderColor: "#F59E0B" }}>
+            <Text style={{ fontSize: 9, color: "#F59E0B", fontFamily: Fonts.bold }}>OPEN</Text>
           </View>
         ) : null}
       </Pressable>
@@ -240,14 +213,14 @@ const DishCard = React.memo(
   },
 );
 
-// 🚀 PERFORMANCE OPTIMIZATION: Surgical Quantity Updates
+// ðŸš€ PERFORMANCE OPTIMIZATION: Surgical Quantity Updates
 // This wrapper ensures only the SPECIFIC dish card being updated re-renders.
 const DishCardWrapper = React.memo(
   ({ item, width, isPhone, isTablet, isLandscape, onPress }: any) => {
     const currentContextId = useCartStore((state) => state.currentContextId);
     const dishId = item.DishId || item.id;
 
-    // ⚡ SURGICAL SUBSCRIPTION: Only re-render if the quantity of THIS specific product changes
+    // âš¡ SURGICAL SUBSCRIPTION: Only re-render if the quantity of THIS specific product changes
     const cartQty = useCartStore((state) => {
       if (!currentContextId) return 0;
       const qtyMap = state.cartQtyMap[currentContextId] || {};
@@ -330,7 +303,7 @@ const GroupSkeleton = () => (
   </View>
 );
 
-// 🚀 PERFORMANCE OPTIMIZATION: Cart Badge Component
+// ðŸš€ PERFORMANCE OPTIMIZATION: Cart Badge Component
 const CartBadge = React.memo(({ isPhone, isLandscape }: any) => {
   const currentContextId = useCartStore((state) => state.currentContextId);
   const count = useCartStore((state) => {
@@ -428,7 +401,7 @@ export default function MenuScreen() {
 
   const orderContext = useOrderContextStore((state) => state.currentOrder);
 
-  // 🟢 OPTIMIZED SELECTORS: Removed cart subscription from main screen to prevent full-screen re-renders.
+  // ðŸŸ¢ OPTIMIZED SELECTORS: Removed cart subscription from main screen to prevent full-screen re-renders.
   const currentContextId = useCartStore((state) => state.currentContextId);
   const displayOrderId = useCartStore(
     (state) =>
@@ -442,7 +415,7 @@ export default function MenuScreen() {
     (s: any) => s.settings.enableCheckoutBill,
   );
 
-  // 🟢 QUANTITY TRACKING: Handled surgically within DishCardWrapper to avoid O(N^2) re-renders
+  // ðŸŸ¢ QUANTITY TRACKING: Handled surgically within DishCardWrapper to avoid O(N^2) re-renders
 
   // Removed activeOrder memo to avoid system-wide re-renders.
   // Access on-demand in handlers instead.
@@ -570,11 +543,11 @@ export default function MenuScreen() {
   // Sidebar width should be more responsive
   const cartWidth = isTablet
     ? width > 1024
-      ? 380
-      : 330
+      ? 320
+      : 280
     : isLandscape
-      ? usableWidth * 0.38
-      : width * 0.62;
+      ? usableWidth * 0.32
+      : width * 0.55;
 
   const mainWidth = showCart
     ? (isLandscape && !isTablet ? usableWidth : width) - cartWidth
@@ -599,118 +572,215 @@ export default function MenuScreen() {
   const gap = isPhone ? (isLandscape ? 12 : 8) : 12;
   // Increase internal padding subtraction (24 -> 32) to ensure cards don't touch edges or sidebar
   const cardWidth = Math.floor(
-    (mainWidth - (isPhone ? 32 : 40) - gap * (columns - 1)) / columns,
+    (mainWidth - (isPhone ? 16 : 20) - gap * (columns - 1)) / columns,
   );
 
   const renderTopBar = () => (
     <View
       style={[
         styles.topBar,
-        isPhone && isLandscape && { marginBottom: 6, height: 40 },
+        {
+          backgroundColor: "#0B1015",
+          paddingVertical: 10,
+        },
+        isPhone && isLandscape && {
+          marginBottom: 6,
+          height: 48,
+        },
       ]}
     >
+      {/* BACK BUTTON */}
       <TouchableOpacity
         onPress={() => {
           router.replace("/(tabs)/category");
         }}
         style={[
           styles.backBtn,
-          isPhone && isLandscape && { width: 36, height: 36, borderRadius: 8 },
+          {
+            backgroundColor: "#171D23",
+            borderWidth: 1,
+            borderColor: "#303840",
+            borderRadius: 14,
+          },
+          isPhone &&
+          isLandscape && {
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+          },
         ]}
       >
         <Ionicons
           name="arrow-back"
-          size={isPhone && isLandscape ? 20 : 24}
-          color={Theme.textPrimary}
+          size={isPhone && isLandscape ? 20 : 26}
+          color="#FFFFFF"
         />
       </TouchableOpacity>
+
+      {/* SEARCH */}
       <View
         style={[
           styles.searchWrap,
-          isPhone && isLandscape && { height: 36, flex: 0.8 },
+          {
+            backgroundColor: "#171D23",
+            borderWidth: 1,
+            borderColor: "#303840",
+            borderRadius: 15,
+            height: 54,
+          },
+          isPhone &&
+          isLandscape && {
+            height: 40,
+            flex: 0.8,
+          },
         ]}
       >
         <Ionicons
           name="search"
-          size={isPhone && isLandscape ? 16 : 20}
-          color={Theme.textMuted}
+          size={isPhone && isLandscape ? 17 : 22}
+          color="#8995A3"
           style={styles.searchIcon}
         />
+
         <TextInput
           style={[
             styles.searchInput,
-            isPhone && isLandscape && { fontSize: 13 },
+            {
+              color: "#FFFFFF",
+            },
+            isPhone &&
+            isLandscape && {
+              fontSize: 13,
+            },
           ]}
-          placeholder="Search items..."
+          placeholder="Search menu or items..."
+          placeholderTextColor="#8995A3"
           value={searchText}
           onChangeText={setSearchText}
         />
+
         {searchText.length > 0 && (
           <TouchableOpacity onPress={() => setSearchText("")}>
-            <Ionicons name="close-circle" size={16} color={Theme.textMuted} />
+            <Ionicons
+              name="close-circle"
+              size={18}
+              color="#8995A3"
+            />
           </TouchableOpacity>
         )}
       </View>
 
-      <View style={styles.headerRightActions}>
+      {/* RIGHT BUTTONS */}
+      <View
+        style={[
+          styles.headerRightActions,
+          {
+            gap: 10,
+          },
+        ]}
+      >
+        {/* EXISTING WINDOW CONTROLS */}
         <WindowControls buttonStyle={styles.headerBillBtn} />
+
+        {/* REFRESH */}
         <TouchableOpacity
           style={[
             styles.headerBillBtn,
+            {
+              backgroundColor: "#11171D",
+              borderWidth: 1,
+              borderColor: "#303840",
+              borderRadius: 14,
+            },
             isPhone &&
-            isLandscape && { width: 36, height: 36, borderRadius: 8 },
-            menuLoading && { opacity: 0.5 },
+            isLandscape && {
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+            },
+            menuLoading && {
+              opacity: 0.5,
+            },
           ]}
           onPress={handleForceRefresh}
           disabled={menuLoading}
         >
           {menuLoading ? (
-            <ActivityIndicator size="small" color={Theme.primary} />
+            <ActivityIndicator
+              size="small"
+              color="#FF6B00"
+            />
           ) : (
             <Ionicons
               name="refresh-outline"
-              size={isPhone && isLandscape ? 20 : 24}
-              color={Theme.primary}
+              size={isPhone && isLandscape ? 20 : 25}
+              color="#FFFFFF"
             />
           )}
         </TouchableOpacity>
 
+        {/* RECEIPT */}
         <TouchableOpacity
           style={[
             styles.headerBillBtn,
+            {
+              backgroundColor: "#11171D",
+              borderWidth: 1,
+              borderColor: "#303840",
+              borderRadius: 14,
+            },
             isPhone &&
-            isLandscape && { width: 36, height: 36, borderRadius: 8 },
+            isLandscape && {
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+            },
           ]}
           onPress={() => setShowReprintOptions(true)}
         >
           <Ionicons
             name="receipt-outline"
-            size={isPhone && isLandscape ? 20 : 24}
-            color={Theme.primary}
+            size={isPhone && isLandscape ? 20 : 25}
+            color="#FFFFFF"
           />
         </TouchableOpacity>
 
+        {/* CART */}
         <TouchableOpacity
           style={[
             styles.headerCartBtn,
+            {
+              backgroundColor: "#11171D",
+              borderWidth: 1,
+              borderColor: "#303840",
+              borderRadius: 14,
+            },
             isPhone &&
-            isLandscape && { width: 36, height: 36, borderRadius: 8 },
-            showCart && { backgroundColor: Theme.primaryLight },
+            isLandscape && {
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+            },
           ]}
           onPress={toggleCart}
         >
           <Ionicons
             name={showCart ? "cart" : "cart-outline"}
-            size={isPhone && isLandscape ? 20 : 24}
-            color={Theme.primary}
+            size={isPhone && isLandscape ? 18 : 22}
+            color="#FFFFFF"
           />
-          <CartBadge isPhone={isPhone} isLandscape={isLandscape} />
+
+          <CartBadge
+            isPhone={isPhone}
+            isLandscape={isLandscape}
+          />
         </TouchableOpacity>
 
         <View style={styles.topActions} />
       </View>
     </View>
   );
+
 
   const renderCategoryNav = () => (
     <View
@@ -719,8 +789,11 @@ export default function MenuScreen() {
         isPhone && isLandscape && { marginBottom: 6 },
       ]}
     >
+      {/* KITCHEN / CATEGORY */}
       <ScrollView
-        horizontal
+        horizontal={true}
+        scrollEnabled={true}
+        directionalLockEnabled={false}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.catScroll}
       >
@@ -729,16 +802,25 @@ export default function MenuScreen() {
             key={k.CategoryId}
             style={[
               styles.catPill,
-              selectedKitchenId === k.CategoryId && styles.catPillActive,
-              isPhone && isLandscape && { height: 36, paddingHorizontal: 16 },
+              selectedKitchenId === k.CategoryId &&
+              styles.catPillActive,
+              isPhone &&
+              isLandscape && {
+                height: 36,
+                paddingHorizontal: 16,
+              },
             ]}
             onPress={() => loadGroups(k.CategoryId)}
           >
             <Text
               style={[
                 styles.catText,
-                selectedKitchenId === k.CategoryId && styles.catTextActive,
-                isPhone && isLandscape && { fontSize: 13 },
+                selectedKitchenId === k.CategoryId &&
+                styles.catTextActive,
+                isPhone &&
+                isLandscape && {
+                  fontSize: 13,
+                },
               ]}
             >
               {k.KitchenTypeName}
@@ -747,14 +829,21 @@ export default function MenuScreen() {
         ))}
       </ScrollView>
 
+      {/* DISH GROUP */}
       <View
-        style={isPhone && isLandscape ? { marginTop: 12 } : { marginTop: 15 }}
+        style={
+          isPhone && isLandscape
+            ? { marginTop: 12 }
+            : { marginTop: 15 }
+        }
       >
         {isInitialLoading ? (
           <GroupSkeleton />
         ) : groups.length === 0 ? (
           <View style={styles.emptyNavState}>
-            <Text style={styles.emptyNavText}>No Dishgroup added</Text>
+            <Text style={styles.emptyNavText}>
+              No Dishgroup added
+            </Text>
           </View>
         ) : (
           <ScrollView
@@ -767,17 +856,27 @@ export default function MenuScreen() {
                 key={g.DishGroupId}
                 style={[
                   styles.groupPill,
-                  selectedGroup === g.DishGroupId && styles.groupPillActive,
+                  selectedGroup === g.DishGroupId &&
+                  styles.groupPillActive,
                   isPhone &&
-                  isLandscape && { height: 36, paddingHorizontal: 14 },
+                  isLandscape && {
+                    height: 36,
+                    paddingHorizontal: 14,
+                  },
                 ]}
-                onPress={() => loadDishes(g.DishGroupId)}
+                onPress={() =>
+                  loadDishes(g.DishGroupId)
+                }
               >
                 <Text
                   style={[
                     styles.groupText,
-                    selectedGroup === g.DishGroupId && styles.groupTextActive,
-                    isPhone && isLandscape && { fontSize: 12 },
+                    selectedGroup === g.DishGroupId &&
+                    styles.groupTextActive,
+                    isPhone &&
+                    isLandscape && {
+                      fontSize: 12,
+                    },
                   ]}
                 >
                   {g.DishGroupName}
@@ -988,7 +1087,7 @@ export default function MenuScreen() {
       try {
         const res = await fetch(`${API_URL}/api/menu/modifiers/${dish.DishId}`);
         const data = await res.json();
-        
+
         if (Array.isArray(data) && data.length > 0) {
           setModifiers(data);
           setShowModifier(true);
@@ -1046,7 +1145,7 @@ export default function MenuScreen() {
 
   const adjustModifierQuantity = (mod: any, gId: string, delta: number) => {
     const key = `${mod.ModifierID}_${gId}`;
-    
+
     const group = groupedModifiers.find(g => g.groupId === gId);
     const maxSelect = group ? group.maxSelect : 0;
     const multiselect = group ? group.multiselect : false;
@@ -1272,14 +1371,10 @@ export default function MenuScreen() {
                     numColumns={columns}
                     key={columns}
                     renderItem={renderDishItem}
+                    style={{ flex: 1 }}
                     columnWrapperStyle={
                       columns > 1 ? { gap: gap, marginBottom: gap } : undefined
                     }
-                    getItemLayout={(data, index) => ({
-                      length: 150, // Fixed height estimate
-                      offset: 150 * Math.floor(index / columns),
-                      index,
-                    })}
                     removeClippedSubviews={Platform.OS === "android"}
                     initialNumToRender={columns * 5}
                     maxToRenderPerBatch={columns * 3}
@@ -1314,7 +1409,7 @@ export default function MenuScreen() {
             {showCart && <CartSidebar width={cartWidth} />}
           </View>
         ) : (
-          <View style={{ flex: 1, backgroundColor: Theme.bgMain }}>
+          <View style={{ flex: 1, backgroundColor: "#0B1015" }}>
             {/* TAB/PHONE LAYOUT - Hawker Style */}
             <View style={{ padding: isPhone ? 10 : 20, paddingBottom: 0 }}>
               {renderTopBar()}
@@ -1347,6 +1442,7 @@ export default function MenuScreen() {
                       numColumns={columns}
                       key={columns}
                       renderItem={renderDishItem}
+                      style={{ flex: 1 }}
                       columnWrapperStyle={
                         columns > 1
                           ? { gap: gap, marginBottom: gap }
@@ -1360,11 +1456,6 @@ export default function MenuScreen() {
                           justifyContent: "center",
                         },
                       ]}
-                      getItemLayout={(data, index) => ({
-                        length: 150, // Fixed height estimate
-                        offset: 150 * Math.floor(index / columns),
-                        index,
-                      })}
                       removeClippedSubviews={Platform.OS !== "web"}
                       initialNumToRender={columns * 5}
                       maxToRenderPerBatch={columns * 3}
@@ -1629,7 +1720,7 @@ export default function MenuScreen() {
                       const maxSelect = group.maxSelect;
                       const minSelect = group.minSelect;
                       const multiselect = group.multiselect;
-                      
+
                       const groupSelectedCount = Object.entries(selectedModifierQuantities)
                         .filter(([k]) => k.endsWith(`_${gId}`))
                         .reduce((sum, [, q]) => sum + q, 0);
@@ -1988,7 +2079,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.bgMain,
+    borderBottomColor: "#0B1015",
     gap: 12,
   },
   reprintText: {
@@ -2003,7 +2094,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  safe: { flex: 1, backgroundColor: Theme.bgMain },
+  safe: { flex: 1, backgroundColor: "#0B1015" },
   layout: { flex: 1, flexDirection: "row" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   rail: {
@@ -2022,7 +2113,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 16,
   },
-  railItemActive: { backgroundColor: Theme.bgMain },
+  railItemActive: { backgroundColor: "#0B1015" },
   railLabel: {
     fontSize: 10,
     fontFamily: Fonts.bold,
@@ -2088,73 +2179,90 @@ const styles = StyleSheet.create({
     alignItems: "center",
     ...Theme.shadowSm,
   },
-  categoryNavigation: { marginBottom: 15 },
+  categoryNavigation: {
+    marginBottom: 15,
+    backgroundColor: "#0B1015",
+    paddingVertical: 8,
+  },
   catScroll: { gap: 10 },
   catPill: {
     paddingHorizontal: 20,
-    height: 36,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: Theme.border,
+    backgroundColor: "transparent",
+    borderWidth: 1.5,
+    borderColor: "#dededeff",
     justifyContent: "center",
     alignItems: "center",
   },
   catPillActive: {
-    backgroundColor: Theme.primaryLight,
-    borderColor: Theme.primary,
-    borderWidth: 1.5,
-    ...Theme.shadowSm,
+    backgroundColor: "transparent",
+    borderColor: "rgba(229, 229, 229, 1)ff",
+    borderWidth: 2,
   },
-  catText: { fontSize: 14, fontFamily: Fonts.bold, color: Theme.textSecondary },
-  catTextActive: { color: Theme.primary },
+  catText: {
+    fontSize: 14,
+    fontFamily: Fonts.bold,
+    color: "#AAB4C0",
+  },
+
+  catTextActive: {
+    color: "rgba(229, 229, 229, 1)ff",
+  },
   groupScroll: { gap: 8 },
   groupPill: {
     paddingHorizontal: 16,
     height: 38,
     borderRadius: full,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: Theme.border,
+    backgroundColor: "transparent",
+    borderWidth: 1.5,
+    borderColor: "#eeeeeeff",
     justifyContent: "center",
     alignItems: "center",
   },
   groupPillActive: {
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
     borderWidth: 2,
-    borderColor: Theme.primary,
-    ...Theme.shadowSm,
+    borderColor: "#f0f0f0ff",
   },
   groupText: {
     fontSize: 12,
     fontFamily: Fonts.medium,
-    color: Theme.textSecondary,
+    color: "#AAB4C0",
   },
-  groupTextActive: { color: Theme.textPrimary, fontFamily: Fonts.bold },
-  gridContainer: { flex: 1 },
-  listPadding: { paddingBottom: 80 },
+
+  groupTextActive: {
+    color: "#f3f3f3ff",
+    fontFamily: Fonts.bold,
+  },
+  gridContainer: { flex: 1, minHeight: 0 },
+  listPadding: {
+    paddingHorizontal: 4,
+    paddingBottom: 80,
+  },
   card: {
     position: "relative",
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 10,
+    backgroundColor: "#151B21",
+    borderRadius: 16,
+    padding: 8,
     alignItems: "center",
-    ...Theme.shadowMd,
+    borderWidth: 1,
+    borderColor: "#2A323B",
+    overflow: "hidden",
   },
   qtyBadge: {
     position: "absolute",
-    top: 0,
-    right: 0,
-    backgroundColor: Theme.primary,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    top: 8,
+    right: 8,
+    backgroundColor: "#FF6B00",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
     borderWidth: 2,
-    borderColor: "#fff",
-    ...Theme.shadowSm,
+    borderColor: "#151B21",
   },
   qtyBadgeText: {
     color: "#fff",
@@ -2162,32 +2270,33 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   dishImageWrap: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 90,
+    height: 90,
+    borderRadius: 14,
     overflow: "hidden",
-    marginBottom: 8,
-    backgroundColor: Theme.bgMain,
+    marginBottom: 10,
+    backgroundColor: "#1D252D",
   },
   dishImg: { width: "100%", height: "100%" },
   dishName: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: Fonts.black,
-    color: Theme.textPrimary,
+    color: "#FFFFFF",
     textAlign: "center",
     minHeight: 36,
     lineHeight: 18,
+    marginTop: 2,
   },
   dishPrice: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: Fonts.black,
-    color: Theme.primary,
-    marginTop: 4,
+    color: "#FF6B00",
+    marginTop: 6,
   },
   headerCartBtn: {
     width: 48,
     height: 48,
-    backgroundColor: Theme.bgMain,
+    backgroundColor: "#0B1015",
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
@@ -2198,7 +2307,7 @@ const styles = StyleSheet.create({
   headerBillBtn: {
     width: 48,
     height: 48,
-    backgroundColor: Theme.bgMain,
+    backgroundColor: "#0B1015",
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
@@ -2357,7 +2466,7 @@ const styles = StyleSheet.create({
   },
   customInput: {
     height: 52,
-    backgroundColor: Theme.bgMain,
+    backgroundColor: "#0B1015",
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: Theme.border,

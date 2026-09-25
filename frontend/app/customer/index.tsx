@@ -29,10 +29,10 @@ const { width } = Dimensions.get("window");
 
 // ─── Premium Design System Tokens (Mapped to Global POS Theme) ──────────────
 const C = {
-  orangePrimary: Theme.primary,
-  orangeDark:    Theme.primaryDark,
-  orangeLight:   Theme.primary,
-  orangeBg:      Theme.primary,
+  brandPrimary: Theme.primary,
+  brandDark:    Theme.primaryDark,
+  brandLight:   Theme.primary,
+  brandBg:      Theme.primary,
   bg:            Theme.bgMain,     // Warm Cream background
   cardSurface:   Theme.bgCard,     // White card surfaces
   inputBg:       Theme.bgInput,    // Warm input backgrounds
@@ -42,8 +42,8 @@ const C = {
   textMedium:    Theme.textSecondary,
   textMuted:     Theme.textMuted,
   textPlaceholder: Theme.textMuted,
-  orangeTint:    Theme.primaryLight,
-  orangeSoft:    Theme.primaryLight,
+  brandTint:    Theme.primaryLight,
+  brandSoft:    Theme.primaryLight,
   error:         Theme.danger,
   success:       Theme.success,
 };
@@ -592,7 +592,7 @@ export default function CustomerWelcomeScreen() {
                       <Image source={{ uri: logoUri }} style={styles.logoImage} />
                     ) : (
                       <View style={styles.foodIllustration}>
-                        <Ionicons name="restaurant" size={32} color={C.orangePrimary} />
+                        <Ionicons name="restaurant" size={32} color={C.brandPrimary} />
                       </View>
                     )}
                   </View>
@@ -658,7 +658,7 @@ export default function CustomerWelcomeScreen() {
                     <Image source={{ uri: logoUri }} style={styles.logoImage} />
                   ) : (
                     <View style={styles.foodIllustration}>
-                      <Ionicons name="restaurant" size={32} color={C.orangePrimary} />
+                      <Ionicons name="restaurant" size={32} color={C.brandPrimary} />
                     </View>
                   )}
                 </View>
@@ -680,9 +680,9 @@ export default function CustomerWelcomeScreen() {
               {/* Title Header matching the Welcome style */}
               <Text style={styles.mockupCardTitle}>
                 {activeTab === "signin" ? (
-                  <Text>Welcome <Text style={{ color: C.orangePrimary }}>Back!</Text></Text>
+                  <Text>Welcome <Text style={{ color: C.brandPrimary }}>Back!</Text></Text>
                 ) : (
-                  <Text>Register <Text style={{ color: C.orangePrimary }}>Now!</Text></Text>
+                  <Text>Register <Text style={{ color: C.brandPrimary }}>Now!</Text></Text>
                 )}
               </Text>
               <Text style={styles.mockupCardSubtitle}>
@@ -734,7 +734,7 @@ export default function CustomerWelcomeScreen() {
                   <View style={styles.dividerLine} />
                 </View>
                 <TouchableOpacity activeOpacity={0.8} style={styles.guestPillBtn} onPress={handleGuest}>
-                  <Ionicons name="person-outline" size={18} color={C.orangePrimary} />
+                  <Ionicons name="person-outline" size={18} color={C.brandPrimary} />
                   <Text style={styles.guestPillBtnText}>Continue as Guest</Text>
                 </TouchableOpacity>
               </View>
@@ -765,7 +765,7 @@ export default function CustomerWelcomeScreen() {
                 <Text style={cardFieldStyles.fieldLabel}>Phone Number*</Text>
                 <View style={cardFieldStyles.inputWrap}>
                   <View style={cardFieldStyles.iconBadge}>
-                    <Ionicons name="call-outline" size={18} color={C.orangePrimary} />
+                    <Ionicons name="call-outline" size={18} color={C.brandPrimary} />
                   </View>
                   <TextInput
                     style={cardFieldStyles.input}
@@ -852,7 +852,7 @@ export default function CustomerWelcomeScreen() {
                   <View style={styles.dividerLine} />
                 </View>
                 <TouchableOpacity activeOpacity={0.8} style={styles.guestPillBtn} onPress={handleGuest}>
-                  <Ionicons name="person-outline" size={18} color={C.orangePrimary} />
+                  <Ionicons name="person-outline" size={18} color={C.brandPrimary} />
                   <Text style={styles.guestPillBtnText}>Continue as Guest</Text>
                 </TouchableOpacity>
               </View>
@@ -882,7 +882,7 @@ export default function CustomerWelcomeScreen() {
           >
             <View style={styles.alertModalContent}>
               <View style={styles.alertIconBadge}>
-                <Ionicons name="alert-circle-outline" size={32} color={C.orangePrimary} />
+                <Ionicons name="alert-circle-outline" size={32} color={C.brandPrimary} />
               </View>
               <Text style={styles.alertModalTitle}>{popupConfig.title}</Text>
               <Text style={styles.alertModalMessage}>{popupConfig.message}</Text>
@@ -1022,7 +1022,7 @@ function CardField({
       <View style={[cardFieldStyles.inputWrap, isFocused && cardFieldStyles.inputWrapFocused]}>
         {icon && (
           <View style={cardFieldStyles.iconBadge}>
-            <Ionicons name={icon} size={18} color={C.orangePrimary} />
+            <Ionicons name={icon} size={18} color={C.brandPrimary} />
           </View>
         )}
         <TextInput
@@ -1039,7 +1039,7 @@ function CardField({
         />
         {rightIcon && (
           <TouchableOpacity onPress={onRightIconPress} style={cardFieldStyles.rightIconTouch}>
-            <Ionicons name={rightIcon} size={19} color={isFocused ? C.orangePrimary : C.textMuted} />
+            <Ionicons name={rightIcon} size={19} color={isFocused ? C.brandPrimary : C.textMuted} />
           </TouchableOpacity>
         )}
       </View>
@@ -1054,7 +1054,7 @@ const cardFieldStyles = StyleSheet.create({
   fieldLabel: {
     fontSize: 14,
     fontWeight: "800",
-    color: C.orangePrimary,
+    color: C.brandPrimary,
     marginBottom: 6,
     letterSpacing: 0.2,
   },
@@ -1069,7 +1069,7 @@ const cardFieldStyles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   inputWrapFocused: {
-    borderColor: C.orangePrimary,
+    borderColor: C.brandPrimary,
     backgroundColor: "#FFF5F0",
   },
   iconBadge: {
@@ -1139,7 +1139,7 @@ const styles = StyleSheet.create({
     left: -40,
     right: -40,
     height: 340,
-    backgroundColor: C.orangePrimary,
+    backgroundColor: C.brandPrimary,
     borderBottomLeftRadius: 160,
     borderBottomRightRadius: 180,
     overflow: "hidden",
@@ -1151,7 +1151,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
-    backgroundColor: C.orangeLight,
+    backgroundColor: C.brandLight,
     opacity: 0.6,
   },
   headerWaveCircleSmall: {
@@ -1161,7 +1161,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor: C.orangeBg,
+    backgroundColor: C.brandBg,
     opacity: 0.4,
   },
   floatingGeo: {
@@ -1230,7 +1230,7 @@ const styles = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: 34,
     marginTop: 8,
-    shadowColor: C.orangePrimary,
+    shadowColor: C.brandPrimary,
     shadowOffset: { width: 0, height: 16 },
     shadowOpacity: 0.15,
     shadowRadius: 30,
@@ -1252,7 +1252,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 4,
-    borderColor: C.orangePrimary,
+    borderColor: C.brandPrimary,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
@@ -1304,7 +1304,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "transparent",
   },
   tabBtnActive: {
-    borderBottomColor: C.orangePrimary,
+    borderBottomColor: C.brandPrimary,
   },
   tabText: {
     fontSize: 15,
@@ -1312,7 +1312,7 @@ const styles = StyleSheet.create({
     color: "#64748B",
   },
   tabTextActive: {
-    color: C.orangePrimary,
+    color: C.brandPrimary,
     fontWeight: "800",
   },
 
@@ -1347,17 +1347,17 @@ const styles = StyleSheet.create({
   forgotText: {
     fontSize: 13,
     fontWeight: "800",
-    color: C.orangePrimary,
+    color: C.brandPrimary,
   },
 
   // Primary Orange Pill Button
   primaryPillBtn: {
     height: 52,
     borderRadius: 26,
-    backgroundColor: C.orangePrimary,
+    backgroundColor: C.brandPrimary,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: C.orangePrimary,
+    shadowColor: C.brandPrimary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.38,
     shadowRadius: 12,
@@ -1399,8 +1399,8 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: C.orangePrimary,
-    backgroundColor: C.orangeTint,
+    borderColor: C.brandPrimary,
+    backgroundColor: C.brandTint,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -1409,7 +1409,7 @@ const styles = StyleSheet.create({
   guestPillBtnText: {
     fontSize: 15,
     fontWeight: "800",
-    color: C.orangePrimary,
+    color: C.brandPrimary,
   },
 
   // Terms & Conditions Checkbox
@@ -1429,8 +1429,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   checkboxActive: {
-    backgroundColor: C.orangePrimary,
-    borderColor: C.orangePrimary,
+    backgroundColor: C.brandPrimary,
+    borderColor: C.brandPrimary,
   },
   termsText: {
     fontSize: 13,
@@ -1438,7 +1438,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   termsLink: {
-    color: C.orangePrimary,
+    color: C.brandPrimary,
     fontWeight: "800",
   },
 
@@ -1456,7 +1456,7 @@ const styles = StyleSheet.create({
   switchAuthLink: {
     fontSize: 14,
     fontWeight: "800",
-    color: C.orangePrimary,
+    color: C.brandPrimary,
   },
 
   // Modals & Overlay
@@ -1523,7 +1523,7 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: C.orangeTint,
+    backgroundColor: C.brandTint,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -1546,7 +1546,7 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingVertical: 14,
     alignItems: "center",
-    backgroundColor: C.orangePrimary,
+    backgroundColor: C.brandPrimary,
     borderRadius: 24,
   },
   alertOkText: {
@@ -1582,7 +1582,7 @@ const styles = StyleSheet.create({
     borderColor: "#FFFFFF",
   },
   promoTopCloseBtnHover: {
-    backgroundColor: C.orangePrimary,
+    backgroundColor: C.brandPrimary,
     borderColor: "#FFFFFF",
   },
   promoPagination: {
@@ -1599,7 +1599,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.3)",
   },
   promoDotActive: {
-    backgroundColor: C.orangePrimary,
+    backgroundColor: C.brandPrimary,
     width: 22,
   },
 
@@ -1616,7 +1616,7 @@ const styles = StyleSheet.create({
     height: 92,
     borderRadius: 46,
     borderWidth: 4,
-    borderColor: C.orangePrimary,
+    borderColor: C.brandPrimary,
     borderTopColor: "transparent",
     borderRightColor: "transparent",
   },
@@ -1674,7 +1674,7 @@ const styles = StyleSheet.create({
   splashWelcome: {
     fontSize: 14,
     fontWeight: "700",
-    color: C.orangePrimary,
+    color: C.brandPrimary,
     marginBottom: 4,
     textTransform: "uppercase",
     letterSpacing: 1.2,
@@ -1707,11 +1707,11 @@ const styles = StyleSheet.create({
   },
   splashBtnSignIn: {
     height: 52,
-    backgroundColor: C.orangePrimary,
+    backgroundColor: C.brandPrimary,
     borderRadius: 26,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: C.orangePrimary,
+    shadowColor: C.brandPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -1728,14 +1728,14 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     borderRadius: 26,
     borderWidth: 2,
-    borderColor: C.orangePrimary,
+    borderColor: C.brandPrimary,
     justifyContent: "center",
     alignItems: "center",
   },
   splashBtnSignUpText: {
     fontSize: 16,
     fontWeight: "800",
-    color: C.orangePrimary,
+    color: C.brandPrimary,
     letterSpacing: 0.3,
   },
   splashBtnGuest: {
@@ -1777,7 +1777,7 @@ const styles = StyleSheet.create({
   headerShopNameMy: {
     fontSize: 26,
     fontWeight: "700",
-    color: C.orangePrimary,
+    color: C.brandPrimary,
     fontStyle: "italic",
     fontFamily: Platform.select({ ios: "Georgia", android: "serif", web: "Georgia, serif" }),
     lineHeight: 28,
@@ -1799,7 +1799,7 @@ const styles = StyleSheet.create({
   headerShopNameRestaurant: {
     fontSize: 22,
     fontWeight: "900",
-    color: C.orangePrimary,
+    color: C.brandPrimary,
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },
@@ -1813,7 +1813,7 @@ const styles = StyleSheet.create({
   sloganLine: {
     width: 20,
     height: 1.5,
-    backgroundColor: C.orangePrimary,
+    backgroundColor: C.brandPrimary,
   },
   sloganText: {
     fontSize: 12,

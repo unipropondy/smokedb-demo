@@ -85,7 +85,7 @@ export default function WindowControls({ buttonStyle, iconSize = 20, showText = 
           onPress={handleHome}
           activeOpacity={0.7}
         >
-          <Ionicons name="home" size={iconSize} color={Theme.primary} />
+          <Ionicons name="home" size={iconSize} color="#FFFFFF" />
           {showText && <Text style={styles.btnText}>Home</Text>}
         </TouchableOpacity>
       )}

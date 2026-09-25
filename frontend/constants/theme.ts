@@ -1,47 +1,47 @@
 import { Platform } from 'react-native';
 
 /**
- * Light Warm Food POS Theme
- * Primary: Orange #F97316
- * Background: Warm Cream #FAF7F2
+ * Blue POS Theme
+ * Primary: Blue #3B82F6
+ * Background: White #FFFFFF
  */
 
 export const Theme = {
   // ── Primary Brand ──
-  primary: '#FF5E1A',
-  primaryDark: '#E04D10',
-  primaryLight: '#FFF4EC',
-  primaryBorder: 'rgba(255,94,26,0.35)',
+  primary: '#3B82F6',
+  primaryDark: '#1D4ED8',
+  primaryLight: '#EFF6FF',
+  primaryBorder: 'rgba(59,130,246,0.35)',
 
   // ── Backgrounds ──
-  bgMain: '#FAF7F2',
+  bgMain: '#F8FAFC',
   bgCard: '#FFFFFF',
-  bgInput: '#F5F0E8',
+  bgInput: '#F1F5F9',
   bgNav: '#FFFFFF',
-  bgMuted: '#F0EBE3',
-  bgOverlay: 'rgba(250,247,242,0.95)',
+  bgMuted: '#F1F5F9',
+  bgOverlay: 'rgba(248, 250, 252, 0.95)',
 
   // ── Dark/Professional Palette ──
-  bgDark: '#0F172A',     // Midnight Slate
-  cardDark: '#1E293B',   // Shadow Slate
-  borderDark: '#334155', // Slate Border
-  bgDarkMuted: '#1E293B',
+  bgDark: '#0F172A',
+  cardDark: '#1E293B',
+  borderDark: '#334155',
+  bgDarkMuted: '#334155',
 
   // ── Text ──
-  textPrimary: '#1C1C1E',
-  textSecondary: '#6B6B6B',
-  textMuted: '#9CA3AF',
-  textInverse: '#FFFFFF',
-  textOrange: '#FF5E1A',
+  textPrimary: '#0c0c0cff',
+  textSecondary: '#757575ff',
+  textMuted: '#ffffffff',
+  textInverse: '#ffffffff',
+  textBrand: '#3B82F6',
 
   // ── Borders ──
-  border: '#E8E0D5',
-  borderStrong: '#D6CBBC',
-  borderOrange: 'rgba(255,94,26,0.3)',
+  border: '#9d9696ff',
+  borderStrong: '#3A444E',
+  borderBrand: 'rgba(59,130,246,0.3)',
 
   // ── Shadows ──
   shadowSm: {
-    shadowColor: '#000',
+    shadowColor: '#000000ff',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 4,
@@ -83,7 +83,7 @@ export const Theme = {
   tableLocked: { bg: 'rgba(239,68,68,0.15)', border: '#EF4444' }, // Red for Reserved
   tableHold: { bg: 'rgba(59,130,246,0.15)', border: '#3B82F6' },
   tableSent: { bg: 'rgba(34,197,94,0.15)', border: '#22C55E' }, // Green for Sent/Dining
-  tableSentOld: { bg: 'rgba(255,94,26,0.15)', border: '#FF5E1A' },
+  tableSentOld: { bg: 'rgba(59,130,246,0.15)', border: '#3B82F6' },
   tableBillRequest: { bg: 'rgba(245,158,11,0.15)', border: '#F59E0B' }, // Amber for Checkout/Bill
   tableEmpty: { bg: '#FFFFFF', border: '#E8E0D5' },
 

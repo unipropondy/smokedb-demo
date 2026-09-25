@@ -1,8 +1,8 @@
 import CalendarPicker from "@/components/CalendarPicker";
-import { socket } from "@/constants/socket";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { API_URL } from "@/constants/Config";
 import { Fonts } from "@/constants/Fonts";
+import { socket } from "@/constants/socket";
 import { Theme } from "@/constants/theme";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -10,9 +10,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
   FlatList,
+  ImageBackground,
   Modal,
   Platform,
   ScrollView,
@@ -23,10 +25,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   useWindowDimensions,
-  View,
-  Animated,
-  Easing,
-  ImageBackground,
+  View
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import {
@@ -422,21 +421,22 @@ const getStatusUI = (status: number, diningSection?: number) => {
   const s = Number(status);
   switch (s) {
     case 1:
-      if (diningSection === 4) {
-        return { text: "PREPARING", color: "#22c55e", lightBg: "#F0FDF4" };
-      }
-      return { text: "DINING", color: "#22c55e", lightBg: "#F0FDF4" };
+      // In Wash
+      return { text: "IN WASH", color: "#3B82F6", lightBg: "#EFF6FF" }; // Blue
     case 2:
-      return { text: "CHECKOUT", color: "#F59E0B", lightBg: "#FFFBEB" };
+      // Checkout / Waiting
+      return { text: "WAITING", color: "#F97316", lightBg: "#FFF7ED" }; // Orange
     case 3:
-      return { text: "HOLD", color: "#3b82f6", lightBg: "#F0F9FF" };
+      // Hold -> We map this to something else if needed, let's keep it blue
+      return { text: "HOLD", color: "#0EA5E9", lightBg: "#F0F9FF" };
     case 4:
-      return { text: "OVERTIME", color: "#8b5cf6", lightBg: "#F5F3FF" };
+      // Overtime / Completed -> We can map Overtime to Completed for this UI
+      return { text: "COMPLETED", color: "#22C55E", lightBg: "#F0FDF4" }; // Green
     case 5:
-      return { text: "RESERVED", color: "#ef4444", lightBg: "#FEF2F2" };
+      return { text: "RESERVED", color: "#8B5CF6", lightBg: "#F5F3FF" }; // Purple
     case 0:
     default:
-      return { text: "AVAILABLE", color: "#C2A580", lightBg: "#FAF6F0" }; // Tan/Beige
+      return { text: "EMPTY", color: "#9CA3AF", lightBg: "#F3F4F6" }; // Gray
   }
 };
 
@@ -468,7 +468,7 @@ const RotatingSyncIcon = ({ size = 16, color = "#3b82f6" }: { size?: number; col
   );
 };
 
-// --- MEMOIZED TABLE COMPONENT ---
+// --- MEMOIZED TABLE COMPONENT (CAR WASH BAY CARD) ---
 const TableItemComponent = React.memo(
   ({
     tableId,
@@ -481,7 +481,8 @@ const TableItemComponent = React.memo(
     isTabletPortrait,
     isAbsoluteLayout,
     layoutScale = 1,
-    backgroundTheme = "wood",
+    backgroundTheme = "light",
+    isTablet,
   }: {
     tableId: string;
     item: TableItem;
@@ -494,808 +495,243 @@ const TableItemComponent = React.memo(
     isAbsoluteLayout?: boolean;
     layoutScale?: number;
     backgroundTheme?: string;
+    isTablet?: boolean;
   }) => {
-    // 🚀 O(1) Store Subscription: Only re-renders when THIS table changes
     const tableData = useTableStatusStore((state) => state.tableMap[tableId]);
+    const terminalStatus = useTerminalPaymentStore((state) => state.sessions[tableId]?.status);
 
-    // Subscribe to terminal payment session — re-renders only when this table's session changes
-    const terminalStatus = useTerminalPaymentStore(
-      (state) => state.sessions[tableId]?.status
-    );
+    // ── Per-table Car Number from AsyncStorage ──────────────────────────────
+    const [storedCarNumber, setStoredCarNumber] = useState<string | null>(null);
+    useEffect(() => {
+      let cancelled = false;
+      AsyncStorage.getItem(`car_number_${tableId}`).then((val) => {
+        if (!cancelled) setStoredCarNumber(val || null);
+      }).catch(() => {});
+      return () => { cancelled = true; };
+    }, [tableId]);
 
-    // 🚀 SYNC-FIRST: Prioritize real-time data from the global store
+    // Listen for store-level carNumber updates to sync storedCarNumber in real time
+    useEffect(() => {
+      const storeCarNumber = (tableData as any)?.carNumber;
+      if (storeCarNumber) {
+        setStoredCarNumber(storeCarNumber);
+      }
+    }, [(tableData as any)?.carNumber]);
+
     const status = tableData
-      ? tableData.status === "SENT"
-        ? 1
-        : tableData.status === "BILL_REQUESTED"
-          ? 2
-          : tableData.status === "HOLD"
-            ? 3
-            : tableData.status === "LOCKED"
-              ? 5
+      ? tableData.status === "SENT" ? 1
+        : tableData.status === "BILL_REQUESTED" ? 2
+          : tableData.status === "HOLD" ? 3
+            : tableData.status === "LOCKED" ? 5
               : 0
       : Number(item.Status);
 
-    const billAmount =
-      tableData?.totalAmount !== undefined
-        ? tableData.totalAmount
-        : Number(item.totalAmount) || 0;
-    const rawStartTime =
-      tableData?.startTime ||
-      (item.StartTime
-        ? typeof item.StartTime === "string"
-          ? parseDatabaseDate(item.StartTime).getTime()
-          : item.StartTime
-        : 0);
-    const isOvertime =
-      status !== 0 &&
-      (tableData?.isHoldOvertime ||
-        Number(item.isOvertime) === 1 ||
-        Number(item.isHoldOvertime) === 1);
+    const billAmount = tableData?.totalAmount !== undefined ? tableData.totalAmount : Number(item.totalAmount) || 0;
+    const rawStartTime = tableData?.startTime || (item.StartTime
+      ? typeof item.StartTime === "string" ? parseDatabaseDate(item.StartTime).getTime() : item.StartTime
+      : 0);
+    const isOvertime = status !== 0 && (tableData?.isHoldOvertime || Number(item.isOvertime) === 1 || Number(item.isHoldOvertime) === 1);
 
-    let ui = getStatusUI(status, item.DiningSection);
+    let effectiveStatus = status;
+    if ((status === 1 || status === 3) && isOvertime) effectiveStatus = 4;
 
-    // Dynamic Overtime: If occupied (Dining/Hold) and flagged as overtime, override UI
-    if ((status === 1 || status === 3) && isOvertime) {
-      ui = getStatusUI(4, item.DiningSection);
-    }
-
-    // 🌹 QR PAID: entryStatus='q' + paymentStatus=1 → Rose card + "Paid" label
-    const rawEntryStatus =
-      (tableData?.entryStatus !== undefined && tableData?.entryStatus !== null)
-        ? tableData.entryStatus
-        : item.entryStatus;
-    const rawPaymentStatus =
-      (tableData as any)?.paymentStatus !== undefined
-        ? (tableData as any).paymentStatus
-        : item.paymentStatus;
+    const rawEntryStatus = (tableData?.entryStatus !== undefined && tableData?.entryStatus !== null) ? tableData.entryStatus : item.entryStatus;
+    const rawPaymentStatus = (tableData as any)?.paymentStatus !== undefined ? (tableData as any).paymentStatus : item.paymentStatus;
     const isPaid = rawEntryStatus === "q" && Number(rawPaymentStatus) === 1;
-
-    if (isPaid) {
-      ui = { text: "PAID", color: "#f43f5e", lightBg: "#fff1f2" };
-    }
-
-    let borderColor = status === 0 ? Theme.border : ui.color;
-    let borderWidth = status !== 0 ? 2 : 1.5;
-
-    if (terminalStatus === "processing") {
-      borderColor = "#3b82f6";
-      borderWidth = 3;
-    } else if (terminalStatus === "failed" || terminalStatus === "cancelled") {
-      borderColor = "#ef4444";
-      borderWidth = 3;
-    }
-
-    const bgColor = status !== 0 ? ui.lightBg : Theme.bgCard;
-    const textColor = status === 0 ? Theme.textPrimary : ui.color;
-    let labelColor = Theme.textPrimary;
-
 
     let timeText = "";
     if (rawStartTime && status !== 0 && status !== 5) {
-      timeText = formatToSingaporeTime(rawStartTime, {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
+      timeText = formatToSingaporeTime(rawStartTime, { hour: "2-digit", minute: "2-digit", hour12: false });
     }
 
-    // Shape logic
-    const tableType = item.TableType ? String(item.TableType).trim().toLowerCase() : "rectangular";
-    const seatsCount = item.Seats !== undefined && item.Seats !== null ? Number(item.Seats) : 4;
-    const xSize = item.XSize !== undefined && item.XSize !== null && Number(item.XSize) > 0 ? Number(item.XSize) : 100;
-    const ySize = item.YSize !== undefined && item.YSize !== null && Number(item.YSize) > 0 ? Number(item.YSize) : 80;
-
-    // Outer table size calculations (leaving space for chairs)
-    const maxTableDim = itemSize - 28; // Padding on all sides for chairs
-    const maxDimension = Math.max(xSize, ySize) || 100;
-
-    let tableW = isAbsoluteLayout ? (xSize * 0.6) * layoutScale : Math.max(itemSize * 0.45, (xSize / maxDimension) * maxTableDim);
-    let tableH = isAbsoluteLayout ? (ySize * 0.6) * layoutScale : Math.max(itemSize * 0.45, (ySize / maxDimension) * maxTableDim);
-
-    let borderRadius = 8; // rectangular default
-    if (tableType === "square") {
-      const size = Math.max(tableW, tableH);
-      tableW = size;
-      tableH = size;
-      borderRadius = 8;
-    } else if (tableType === "round") {
-      const size = Math.max(tableW, tableH);
-      tableW = size;
-      tableH = size;
-      borderRadius = size / 2;
-    } else if (tableType === "oval") {
-      borderRadius = Math.min(tableW, tableH) / 2;
-    } else if (tableType === "rectangular") {
-      borderRadius = 8;
+    // ── Color palette per status ──────────────────────────────────────────────
+    type StatusStyle = {
+      cardBg: [string, string]; badge: string; badgeBg: string; badgeBorder: string;
+      carColor: string; textColor: string; label: string;
+    };
+    let ss: StatusStyle;
+    if (isPaid) {
+      ss = { cardBg: ["#FFF1F2", "#FFE4E6"], badge: "#EF4444", badgeBg: "#FEF2F2", badgeBorder: "#FCA5A5", carColor: "#EF4444", textColor: "#EF4444", label: "PAID" };
     } else {
-      borderRadius = 12;
-    }
-
-    const tx = isAbsoluteLayout ? 0 : (itemSize - tableW) / 2;
-    const ty = isAbsoluteLayout ? 0 : (itemSize - tableH) / 2;
-    const cx = isAbsoluteLayout ? tableW / 2 : itemSize / 2;
-    const cy = isAbsoluteLayout ? tableH / 2 : itemSize / 2;
-
-    // Dynamically adjust chair size based on seat density to prevent overlap
-    let chairSize = Math.max(10, itemSize * 0.09);
-    if (seatsCount > 10) {
-      chairSize = Math.max(5, chairSize * (10 / seatsCount) * 1.5);
-    }
-    
-    const offset = 4; // elegant gap between table and chairs
-    
-    // Override AVAILABLE colors for premium beige look matching reference
-    let activeColor = status === 0 ? "#D1C7BD" : ui.color;
-    let activeBg = status === 0 ? "#FAF8F5" : ui.lightBg;
-
-    if (backgroundTheme === "light") {
-      if (status === 0) {
-        activeColor = "#22C55E"; // Free -> clean emerald green
-        activeBg = "#FFFFFF";
-      } else if (isPaid) {
-        activeColor = "#F43F5E";
-        activeBg = "#FFFFFF";
-      } else {
-        const effectiveStatus = ((status === 1 || status === 3) && isOvertime) ? 4 : status;
-        switch (effectiveStatus) {
-          case 1: // Dining
-            activeColor = "#22C55E";
-            activeBg = "#FFFFFF";
-            break;
-          case 2: // Checkout
-            activeColor = "#F59E0B";
-            activeBg = "#FFFFFF";
-            break;
-          case 3: // Hold
-            activeColor = "#3B82F6";
-            activeBg = "#FFFFFF";
-            break;
-          case 4: // Overtime
-            activeColor = "#8B5CF6";
-            activeBg = "#FFFFFF";
-            break;
-          case 5: // Reserved
-            activeColor = "#3B82F6";
-            activeBg = "#FFFFFF";
-            break;
-        }
-      }
-    }
-    
-    // Label color mapping for high-readability text
-    if (backgroundTheme === "light") {
-      labelColor = "#000000";
-    } else if (status === 0) {
-      labelColor = "#000000";
-    } else if (isPaid) {
-      labelColor = "#9E1F4B";
-    } else {
-      switch (status) {
-        case 1: labelColor = "#1B5E20"; break; // Dark green
-        case 2: labelColor = "#B66000"; break; // Dark yellow/orange
-        case 3: labelColor = "#0D47A1"; break; // Dark blue
-        case 4:
-        case 5: labelColor = "#B71C1C"; break; // Dark red
-        default: labelColor = activeColor;
-      }
-    }
-
-    // Chair styling (white background with matching color border, top-down chair backrest design!)
-    const chairColor = status === 0 ? (backgroundTheme === "light" ? "#22C55E" : "#D1C7BD") : activeColor;
-    const chairBg = "#FFFFFF";
-
-    // Chair placement calculation
-    const chairPositions: { x: number; y: number; rotate?: string; backrestStyle?: any }[] = [];
-    if (seatsCount > 0) {
-      if (tableType === "round" || tableType === "oval") {
-        const rx = tableW / 2;
-        const ry = tableH / 2;
-        const radiusOffset = chairSize / 2 + offset;
-        for (let i = 0; i < seatsCount; i++) {
-          const angle = (i * 2 * Math.PI) / seatsCount - Math.PI / 2; // start from top
-          const x = cx + (rx + radiusOffset) * Math.cos(angle) - chairSize / 2;
-          const y = cy + (ry + radiusOffset) * Math.sin(angle) - chairSize / 2;
-          
-          // Rotation so backrest (top border) faces outwards
-          const rotationAngle = angle + Math.PI / 2;
-          chairPositions.push({ 
-            x, 
-            y, 
-            rotate: `${rotationAngle}rad`,
-            backrestStyle: { top: 0, left: 0, right: 0, height: 2.2, borderTopLeftRadius: 1.5, borderTopRightRadius: 1.5 }
-          });
-        }
-      } else {
-        // Rectangular / Square logic
-        let topCount = 0;
-        let bottomCount = 0;
-        let leftCount = 0;
-        let rightCount = 0;
-
-        if (seatsCount === 2) {
-          leftCount = 1;
-          rightCount = 1;
-        } else {
-          const base = Math.floor(seatsCount / 4);
-          const rem = seatsCount % 4;
-          topCount = base + (rem > 0 ? 1 : 0);
-          bottomCount = base + (rem > 1 ? 1 : 0);
-          leftCount = base + (rem > 2 ? 1 : 0);
-          rightCount = base;
-        }
-
-        // Top chairs (backrest is on the top)
-        for (let i = 0; i < topCount; i++) {
-          const x = tx + (i + 0.5) * (tableW / topCount) - chairSize / 2;
-          const y = ty - chairSize - offset;
-          chairPositions.push({ 
-            x, 
-            y, 
-            backrestStyle: { top: 0, left: 0, right: 0, height: 2.2, borderTopLeftRadius: 1.5, borderTopRightRadius: 1.5 } 
-          });
-        }
-        // Bottom chairs (backrest is on the bottom)
-        for (let i = 0; i < bottomCount; i++) {
-          const x = tx + (i + 0.5) * (tableW / bottomCount) - chairSize / 2;
-          const y = ty + tableH + offset;
-          chairPositions.push({ 
-            x, 
-            y, 
-            backrestStyle: { bottom: 0, left: 0, right: 0, height: 2.2, borderBottomLeftRadius: 1.5, borderBottomRightRadius: 1.5 } 
-          });
-        }
-        // Left chairs (backrest is on the left)
-        for (let i = 0; i < leftCount; i++) {
-          const x = tx - chairSize - offset;
-          const y = ty + (i + 0.5) * (tableH / leftCount) - chairSize / 2;
-          chairPositions.push({ 
-            x, 
-            y, 
-            backrestStyle: { left: 0, top: 0, bottom: 0, width: 2.2, borderTopLeftRadius: 1.5, borderBottomLeftRadius: 1.5 } 
-          });
-        }
-        // Right chairs (backrest is on the right)
-        for (let i = 0; i < rightCount; i++) {
-          const x = tx + tableW + offset;
-          const y = ty + (i + 0.5) * (tableH / rightCount) - chairSize / 2;
-          chairPositions.push({ 
-            x, 
-            y, 
-            backrestStyle: { right: 0, top: 0, bottom: 0, width: 2.2, borderTopRightRadius: 1.5, borderBottomRightRadius: 1.5 } 
-          });
-        }
-      }
-    }
-
-    // Dynamic color gradient for the table body
-    let gradientColors: [string, string] = ["#FFFFFF", "#FFFFFF"];
-    let tableBorderColor = activeColor;
-    if (backgroundTheme === "light") {
-      gradientColors = ["#FFFFFF", "#FFFFFF"];
-      tableBorderColor = activeColor;
-    } else if (status === 0) {
-      gradientColors = ["#FAF8F5", "#F0EAE1"]; // Subtle blonde-wood / warm linen look
-      tableBorderColor = "#D1C7BD";
-    } else if (isPaid) {
-      gradientColors = ["#FFF1F2", "#FFE4E6"];
-      tableBorderColor = "#FDA4AF";
-    } else {
-      const effectiveStatus = ((status === 1 || status === 3) && isOvertime) ? 4 : status;
       switch (effectiveStatus) {
-        case 1: // Dining (Subtle Green)
-          gradientColors = ["#F0FDF4", "#DCFCE7"];
-          tableBorderColor = "#22c55e";
-          break;
-        case 2: // Checkout (Subtle Yellow/Amber)
-          gradientColors = ["#FFFBEB", "#FEF3C7"];
-          tableBorderColor = "#F59E0B";
-          break;
-        case 3: // Hold (Subtle Blue)
-          gradientColors = ["#F0F9FF", "#E0F2FE"];
-          tableBorderColor = "#3b82f6";
-          break;
-        case 4: // Overtime (Subtle Purple)
-          gradientColors = ["#F5F3FF", "#EDE9FE"];
-          tableBorderColor = "#8b5cf6";
-          break;
-        case 5: // Reserved (Subtle Red)
-          gradientColors = ["#FEF2F2", "#FEE2E2"];
-          tableBorderColor = "#ef4444";
-          break;
+        case 1: ss = { cardBg: ["#EFF6FF", "#DBEAFE"], badge: "#3B82F6", badgeBg: "#EFF6FF", badgeBorder: "#93C5FD", carColor: "#3B82F6", textColor: "#1D4ED8", label: "Washing" }; break;
+        case 2: ss = { cardBg: ["#FFFBEB", "#FEF3C7"], badge: "#F97316", badgeBg: "#FFF7ED", badgeBorder: "#FED7AA", carColor: "#F97316", textColor: "#B45309", label: "Waiting" }; break;
+        case 4: ss = { cardBg: ["#F0FDF4", "#DCFCE7"], badge: "#22C55E", badgeBg: "#F0FDF4", badgeBorder: "#86EFAC", carColor: "#16A34A", textColor: "#15803D", label: "Completed" }; break;
+        case 5: ss = { cardBg: ["#F5F3FF", "#EDE9FE"], badge: "#8B5CF6", badgeBg: "#F5F3FF", badgeBorder: "#C4B5FD", carColor: "#8B5CF6", textColor: "#7C3AED", label: "Reserved" }; break;
+        default: ss = { cardBg: ["#c7c7c7ba", "#F8FAFC"], badge: "#010101ff", badgeBg: "#F8FAFC", badgeBorder: "#E2E8F0", carColor: "#000000a1", textColor: "#64748B", label: "Available" };
       }
     }
 
-    // Placings/plates coordinates inside table body
-    const platePositions: { x: number; y: number }[] = [];
-    if (seatsCount > 0) {
-      if (tableType === "round" || tableType === "oval") {
-        const plateRadiusOffset = Math.max(6, (tableW / 2) - 8);
-        for (let i = 0; i < seatsCount; i++) {
-          const angle = (i * 2 * Math.PI) / seatsCount - Math.PI / 2;
-          const px = tableW / 2 + plateRadiusOffset * Math.cos(angle);
-          const py = tableH / 2 + plateRadiusOffset * Math.sin(angle);
-          platePositions.push({ x: px, y: py });
-        }
-      } else {
-        let topCount = 0;
-        let bottomCount = 0;
-        let leftCount = 0;
-        let rightCount = 0;
+    const isOccupied = effectiveStatus !== 0 && !isPaid;
 
-        if (seatsCount === 2) {
-          leftCount = 1;
-          rightCount = 1;
-        } else {
-          const base = Math.floor(seatsCount / 4);
-          const rem = seatsCount % 4;
-          topCount = base + (rem > 0 ? 1 : 0);
-          bottomCount = base + (rem > 1 ? 1 : 0);
-          leftCount = base + (rem > 2 ? 1 : 0);
-          rightCount = base;
-        }
+    // Use saved dimensions or defaults
+    const xSize = item.XSize !== undefined && item.XSize !== null && Number(item.XSize) > 0 ? Number(item.XSize) : 150;
+    const ySize = item.YSize !== undefined && item.YSize !== null && Number(item.YSize) > 0 ? Number(item.YSize) : 200;
 
-        const distFromEdge = Math.min(8, tableH * 0.18);
-        const distFromEdgeH = Math.min(8, tableW * 0.18);
+    let cardW = isAbsoluteLayout ? xSize * layoutScale : (isTablet ? 150 : 130);
+    let cardH = isAbsoluteLayout ? ySize * layoutScale : (isTablet ? 200 : 160);
 
-        for (let i = 0; i < topCount; i++) {
-          platePositions.push({ x: (i + 0.5) * (tableW / topCount), y: distFromEdge });
-        }
-        for (let i = 0; i < bottomCount; i++) {
-          platePositions.push({ x: (i + 0.5) * (tableW / bottomCount), y: tableH - distFromEdge });
-        }
-        for (let i = 0; i < leftCount; i++) {
-          platePositions.push({ x: distFromEdgeH, y: (i + 0.5) * (tableH / leftCount) });
-        }
-        for (let i = 0; i < rightCount; i++) {
-          platePositions.push({ x: tableW - distFromEdgeH, y: (i + 0.5) * (tableH / rightCount) });
-        }
+    const touchableStyle: any = isAbsoluteLayout
+      ? {
+        position: "absolute",
+        left: (item.XPos || 0) * layoutScale,
+        top: (item.YPos || 0) * layoutScale,
+        width: cardW,
+        height: cardH,
       }
-    }
-
-    if (!isAbsoluteLayout) {
-      return (
-        <TouchableOpacity
-          activeOpacity={isPaid ? 1 : 0.8}
-          disabled={isPaid}
-          style={[
-            styles.tableBox,
-            {
-              width: itemSize,
-              height: itemSize,
-              borderColor,
-              backgroundColor: bgColor,
-              borderWidth,
-              elevation: status !== 0 ? 0 : 2,
-              opacity: isPaid ? 0.92 : 1,
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: 12,
-              position: "relative",
-            },
-          ]}
-          onPress={() => onPress(item, tableData)}
-        >
-          {/* 🚀 HOLD OVERTIME INDICATOR (H) */}
-          {status === 3 && !!tableData?.isHoldOvertime && (
-            <View style={styles.holdOvertimeBadge}>
-              <MaterialCommunityIcons
-                name="alpha-h-circle"
-                size={Math.max(14, itemSize * 0.18)}
-                color={Theme.primary}
-              />
-            </View>
-          )}
-
-          {/* 🚀 QR ORDER INDICATOR (QR badge) */}
-          {((tableData?.entryStatus !== undefined && tableData?.entryStatus !== null)
-            ? tableData.entryStatus
-            : item.entryStatus) === "q" &&
-            status !== 0 && (
-              <View style={styles.qrBadge}>
-                <Ionicons
-                  name="qr-code"
-                  size={Math.max(14, itemSize * 0.18)}
-                  color={ui.color}
-                />
-              </View>
-            )}
-
-          <Text
-            style={[
-              styles.tableNumber,
-              { 
-                fontSize: numberFont, 
-                color: "#000000", 
-                fontWeight: "900"
-              },
-            ]}
-          >
-            {item.label}
-          </Text>
-
-          {status !== 0 && (
-            <View style={[styles.tableInfo, { gap: 1 }]}>
-              <View
-                style={[
-                  styles.statusChip,
-                  { 
-                    backgroundColor: activeBg, 
-                    borderColor: activeColor,
-                    paddingHorizontal: 4,
-                    paddingVertical: 2,
-                    borderRadius: 6,
-                    marginBottom: 1,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.statusChipText,
-                    { color: activeColor, fontSize: smallFont },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {tableData?.customerName ? tableData.customerName : ui.text}
-                </Text>
-              </View>
-
-              {status !== 5 && (
-                <View style={styles.tableStats}>
-                  {timeText ? (
-                    <Text style={[styles.timeText, { fontSize: smallFont - 1, color: textColor }]}>
-                      <Ionicons name="time-outline" size={smallFont - 1} color={textColor} /> {timeText}
-                    </Text>
-                  ) : null}
-                  {billAmount > 0 && (
-                    <Text style={[styles.billText, { fontSize: smallFont + 1, color: textColor, fontWeight: "800" }]}>
-                      ${billAmount.toFixed(2)}
-                    </Text>
-                  )}
-                </View>
-              )}
-            </View>
-          )}
-
-          {status === 5 && (
-            <View style={[styles.lockedOverlay, { marginTop: 1, gap: 1 }]}>
-              <Ionicons name="lock-closed" size={16} color={ui.color} />
-              {tableData?.lockedByName ? (
-                <Text style={[styles.lockedNameText, { fontSize: smallFont - 1 }]}>
-                  {tableData.lockedByName}
-                </Text>
-              ) : null}
-            </View>
-          )}
-        </TouchableOpacity>
-      );
-    }
+      : { width: cardW, margin: 6 };
 
     return (
       <TouchableOpacity
-        activeOpacity={isPaid ? 1 : 0.8}
-        disabled={isPaid}
-        style={isAbsoluteLayout ? {
-          width: itemSize,
-          height: itemSize,
-          position: "relative",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "transparent",
-          borderColor: "transparent",
-          borderWidth: 0,
-          borderRadius: 14,
-          padding: 8,
-          opacity: isPaid ? 0.92 : 1,
-        } : [
-          styles.tableBox,
-          {
-            width: itemSize,
-            height: itemSize,
-            borderColor,
-            backgroundColor: bgColor,
-            borderWidth,
-            elevation: status !== 0 ? 0 : 2,
-            opacity: isPaid ? 0.92 : 1,
-          },
-        ]}
+        activeOpacity={0.85}
         onPress={() => onPress(item, tableData)}
+        style={touchableStyle}
       >
-        {/* Render Chairs */}
-        {chairPositions.map((pos, idx) => {
-          const transform = pos.rotate ? [{ rotate: pos.rotate }] : undefined;
-          const statusChairBorder = status === 0 ? "#9a6a38" : chairColor;
-          return (
-            <View
-              key={`chair-${idx}`}
-              style={{
-                position: "absolute",
-                left: pos.x,
-                top: pos.y,
-                width: chairSize,
-                height: chairSize * 1.25,
-                transform,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              {/* Chair back */}
-              <LinearGradient
-                colors={["#637b60", "#526c4f", "#465d43"]}
-                locations={[0, 0.60, 1.0]}
-                style={{
-                  position: "absolute",
-                  left: 1,
-                  right: 1,
-                  top: 0,
-                  height: "45%",
-                  borderWidth: 1,
-                  borderColor: statusChairBorder,
-                  borderTopLeftRadius: chairSize / 4,
-                  borderTopRightRadius: chairSize / 4,
-                }}
-              />
-              {/* Chair seat */}
-              <View
-                style={{
-                  position: "absolute",
-                  left: 2.2,
-                  right: 2.2,
-                  top: "35%",
-                  bottom: 0,
-                  backgroundColor: "#536d50",
-                  borderWidth: 1,
-                  borderColor: statusChairBorder,
-                  borderBottomLeftRadius: chairSize / 5,
-                  borderBottomRightRadius: chairSize / 5,
-                  borderTopLeftRadius: chairSize / 8,
-                  borderTopRightRadius: chairSize / 8,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ fontFamily: Fonts.bold, fontSize: chairSize * 0.35, color: "#fffeb0" }}>
-                  {idx + 1}
-                </Text>
-              </View>
-            </View>
-          );
-        })}
-
-        {/* Clock/Timer Overlay Badge */}
-        {status > 0 && (
-          <View style={{
-            position: "absolute",
-            top: ty - 6,
-            left: tx + tableW / 2 - 7,
-            width: 14,
-            height: 14,
-            borderRadius: 7,
-            backgroundColor: "#FFFFFF",
-            borderWidth: 1.2,
-            borderColor: activeColor,
-            justifyContent: "center",
-            alignItems: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.15,
-            shadowRadius: 1.5,
-            elevation: 3,
-            zIndex: 99,
-          }}>
-            <Ionicons name="time" size={9} color={activeColor} />
-          </View>
-        )}
-
-        {/* Render Table Body */}
-        <View
+        <LinearGradient
+          colors={ss.cardBg}
           style={{
-            position: "absolute",
-            left: tx,
-            top: ty,
-            width: tableW,
-            height: tableH,
-            borderRadius,
-            borderColor: status === 0 ? "#99652f" : activeColor,
-            borderWidth: 2.2,
-            overflow: "hidden",
-            backgroundColor: "#b77d3d",
-            ...Platform.select({
-              ios: { shadowColor: "#000000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 3 },
-              android: { elevation: 2 },
-              web: { boxShadow: `0 3px 6px rgba(0,0,0,0.16)` } as any,
-            }),
+            flex: 1,
+            borderRadius: 14,
+            padding: 8, // Reduced padding to fit text
+            minHeight: isAbsoluteLayout ? undefined : cardH,
+            borderWidth: 1,
+            borderColor: isOccupied ? ss.badgeBorder : "#E5E7EB",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 6,
+            elevation: isOccupied ? 3 : 1,
           }}
         >
-          <LinearGradient
-            colors={["#d9a866", "#c99452", "#b77d3d"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            locations={[0, 0.45, 1.0]}
-            style={{
-              flex: 1,
-              width: "100%",
-              height: "100%",
-              padding: 2,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            {/* Inner table margin line for craftsmanship style */}
-            <View style={{
-              flex: 1,
-              width: "100%",
-              height: "100%",
-              borderRadius: Math.max(0, borderRadius - 2),
-              borderWidth: 1,
-              borderColor: status === 0 ? "rgba(163, 117, 78, 0.25)" : "rgba(255, 255, 255, 0.4)",
-              justifyContent: "center",
-              alignItems: "center",
-              position: "relative",
-            }}>
-              {/* 🚀 HOLD OVERTIME INDICATOR (H) */}
-              {status === 3 && !!tableData?.isHoldOvertime && (
-                <View style={styles.holdOvertimeBadge}>
-                  <MaterialCommunityIcons
-                    name="alpha-h-circle"
-                    size={Math.max(14, Math.min(tableW, tableH) * 0.18)}
-                    color={Theme.primary}
-                  />
-                </View>
-              )}
-
-              {/* 🚀 QR ORDER INDICATOR (QR badge) */}
-              {((tableData?.entryStatus !== undefined && tableData?.entryStatus !== null)
-                ? tableData.entryStatus
-                : item.entryStatus) === "q" &&
-                status !== 0 && (
-                  <View style={styles.qrBadge}>
-                    <Ionicons
-                      name="qr-code"
-                      size={Math.max(14, Math.min(tableW, tableH) * 0.18)}
-                      color={ui.color}
-                    />
-                  </View>
-                )}
-          <Text
-            style={[
-              styles.tableNumber,
-              { 
-                fontSize: Math.max(12, numberFont * (tableW / itemSize) * 0.9), 
-                color: "#000000", 
-                marginTop: 0, 
-                marginBottom: 0,
-                fontWeight: "900"
-              },
-            ]}
-          >
-            {item.label}
-          </Text>
-
-          {status !== 0 && (
-            <View style={[styles.tableInfo, { gap: 1 }]}>
-              <View
-                style={[
-                  styles.statusChip,
-                  { 
-                    backgroundColor: activeBg, 
-                    borderColor: activeColor,
-                    paddingHorizontal: 4,
-                    paddingVertical: 0.5,
-                    borderRadius: 4,
-                    maxWidth: tableW - 8,
-                    marginBottom: 0,
-                  },
-                ]}
+          {/* ── Row 1: Bay label + status badge + 3-dot ── */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1 }}>
+              <Text
+                style={{ fontFamily: Fonts.bold, fontSize: 13, color: "#1E293B", flexShrink: 1 }}
+                numberOfLines={1}
               >
-                <Text
-                  style={[
-                    styles.statusChipText,
-                    { color: activeColor, fontSize: Math.max(7, smallFont * (tableW / itemSize) * 0.8) },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {tableData?.customerName ? tableData.customerName : ui.text}
-                </Text>
+                Bay {item.label}
+              </Text>
+
+              {/* Status badge */}
+              <View style={{
+                flexDirection: "row", alignItems: "center", gap: 2,
+                backgroundColor: ss.badgeBg, borderRadius: 20, borderWidth: 1,
+                borderColor: ss.badgeBorder, paddingHorizontal: 6, paddingVertical: 2,
+              }}>
+                {effectiveStatus === 1 && <Ionicons name="water" size={10} color={ss.badge} />}
+                {effectiveStatus === 2 && <Ionicons name="time" size={10} color={ss.badge} />}
+                {effectiveStatus === 4 && <Ionicons name="checkmark-circle" size={10} color={ss.badge} />}
+                {effectiveStatus === 5 && <Ionicons name="calendar" size={10} color={ss.badge} />}
+                <Text style={{ fontFamily: Fonts.semiBold, fontSize: 10, color: ss.badge }}>{ss.label}</Text>
               </View>
-
-              {status !== 0 && status !== 5 && (
-                <View style={styles.tableStats}>
-                  {timeText ? (
-                    <Text
-                      style={[
-                        styles.timeText,
-                        { fontSize: Math.max(7, (smallFont - 1) * (tableW / itemSize) * 0.8), color: textColor },
-                      ]}
-                    >
-                      <Ionicons
-                        name="time-outline"
-                        size={Math.max(7, (smallFont - 1) * (tableW / itemSize) * 0.8)}
-                        color={textColor}
-                      />{" "}
-                      {timeText}
-                    </Text>
-                  ) : null}
-                  {billAmount > 0 && (
-                    <Text
-                      style={[
-                        styles.billText,
-                        {
-                          fontSize: Math.max(8, (smallFont + 1) * (tableW / itemSize) * 0.9),
-                          color: textColor,
-                          fontWeight: "800",
-                        },
-                      ]}
-                    >
-                      ${billAmount.toFixed(2)}
-                    </Text>
-                  )}
-                </View>
-              )}
             </View>
-          )}
 
-          {status === 5 && (
-            <View style={[styles.lockedOverlay, { marginTop: 1, gap: 1 }]}>
-              <Ionicons
-                name="lock-closed"
-                size={Math.max(10, tableW * 0.15)}
-                color={ui.color}
-              />
-              {tableData?.lockedByName ? (
+            {/* Three-dot menu */}
+            <TouchableOpacity onPress={(e) => { e.stopPropagation(); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="ellipsis-vertical" size={16} color="#94A3B8" />
+            </TouchableOpacity>
+          </View>
+
+          {/* ── Row 2: Car icon ── */}
+          <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 6, position: "relative" }}>
+            {effectiveStatus === 1 && (
+              <>
+                <Ionicons name="water-outline" size={18} color="rgba(59,130,246,0.5)" style={{ position: "absolute", top: -4, left: "25%" }} />
+                <Ionicons name="water-outline" size={14} color="rgba(59,130,246,0.4)" style={{ position: "absolute", top: 2, right: "22%" }} />
+              </>
+            )}
+            {effectiveStatus === 4 && (
+              <Ionicons name="sparkles" size={16} color="rgba(34,197,94,0.6)" style={{ position: "absolute", top: -2, right: "20%" }} />
+            )}
+            <Ionicons
+              name={isOccupied || isPaid ? "car-sport" : "car-sport"}
+              size={isTablet ? 56 : 48}
+              color={ss.carColor}
+            />
+          </View>
+
+          <View style={{ flex: 1 }} />
+          {/* ── Row 3: Info ── */}
+          <View style={{ marginTop: 6 }}>
+            {/* Car plate number — always show when set */}
+            {/* Car number: prefer store value, then item value, then AsyncStorage fallback */}
+            {(() => {
+              const displayCarNumber =
+                (tableData as any)?.carNumber ||
+                item.carNumber ||
+                storedCarNumber;
+              // Only display the car number if the table is actually occupied or paid (not empty)
+              const shouldDisplay = displayCarNumber && (isOccupied || isPaid);
+              return shouldDisplay ? (
                 <View
                   style={{
-                    backgroundColor: ui.color,
-                    paddingHorizontal: 4,
-                    paddingVertical: 1,
-                    borderRadius: 3,
-                    maxWidth: tableW - 8,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    marginBottom: 3,
                   }}
                 >
+                  <Ionicons
+                    name="car-outline"
+                    size={11}
+                    color={isOccupied ? ss.textColor : "#64748B"}
+                  />
                   <Text
                     style={{
-                      fontSize: Math.max(7, (smallFont - 2) * (tableW / itemSize)),
-                      color: "#FFF",
-                      fontWeight: "bold",
+                      fontFamily: Fonts.bold,
+                      fontSize: 11,
+                      color: isOccupied ? ss.textColor : "#475569",
+                      letterSpacing: 0.5,
                     }}
                     numberOfLines={1}
                   >
-                    {tableData.lockedByName}
+                    {displayCarNumber}
                   </Text>
                 </View>
-              ) : null}
-            </View>
-          )}
-            </View>
-          </LinearGradient>
-        </View>
+              ) : null;
+            })()}
+            {/* Time & amount — only when occupied */}
+            {(isOccupied || isPaid) ? (
+              <>
+                {timeText ? (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 2 }}>
+                    <Ionicons name="time-outline" size={11} color={ss.textColor} />
+                    <Text style={{ fontFamily: Fonts.semiBold, fontSize: 11, color: ss.textColor }}>{timeText}</Text>
+                  </View>
+                ) : null}
+                {(tableData?.lockedByName) ? (
+                  <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: "#64748B" }} numberOfLines={1}>
+                    {tableData.lockedByName}
+                  </Text>
+                ) : null}
+                {billAmount > 0 && (
+                  <Text style={{ fontFamily: Fonts.black, fontSize: 13, color: ss.badge, marginTop: 3 }}>
+                    ${billAmount.toFixed(2)}
+                  </Text>
+                )}
+              </>
+            ) : null}
+          </View>
+        </LinearGradient>
 
-
-          {/* 🟢 LIVE TERMINAL INDICATOR: top-left spinner for processing, circular red error badge when cancelled/failed */}
-          {terminalStatus && terminalStatus !== "idle" && (
-            <TouchableOpacity
-              style={[
-                styles.terminalProcessingBadge,
-                (terminalStatus === "cancelled" || terminalStatus === "failed") &&
-                  styles.terminalErrorBadge,
-              ]}
-              onPress={(e) => {
-                e.stopPropagation();
-                useTerminalPaymentStore.getState().clearSession(tableId);
-              }}
-            >
-              {terminalStatus === "processing" ? (
-                <RotatingSyncIcon size={20} color="#3b82f6" />
-              ) : (
-                <Ionicons name="alert" size={16} color="#ffffff" />
-              )}
-            </TouchableOpacity>
-          )}
+        {/* Terminal processing indicator */}
+        {terminalStatus && terminalStatus !== "idle" && (
+          <TouchableOpacity
+            style={{ position: "absolute", top: 8, right: 28, width: 22, height: 22, borderRadius: 11, backgroundColor: terminalStatus === "processing" ? "#EFF6FF" : "#FEF2F2", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: terminalStatus === "processing" ? "#93C5FD" : "#FCA5A5", elevation: 3 }}
+            onPress={(e) => { e.stopPropagation(); useTerminalPaymentStore.getState().clearSession(tableId); }}
+          >
+            {terminalStatus === "processing" ? (
+              <RotatingSyncIcon size={14} color="#3b82f6" />
+            ) : (
+              <Ionicons name="alert" size={12} color="#EF4444" />
+            )}
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
     );
-  },
+  }
 );
-
 const TableGridSkeleton = ({
   itemSize,
   columns,
@@ -1342,6 +778,7 @@ type TableItem = {
   entryStatus?: string;
   paymentStatus?: number;
   customerName?: string;
+  carNumber?: string;
   pax?: number;
   TableType?: string;
   Seats?: number;
@@ -1354,23 +791,23 @@ type TableItem = {
 const SECTIONS = ["SECTION_1", "SECTION_2", "SECTION_3", "TAKEAWAY"];
 
 const SECTION_LABELS: Record<string, string> = {
-  SECTION_1: "Section 1",
-  SECTION_2: "Section 2",
-  SECTION_3: "Section 3",
+  SECTION_1: "Wash Bays",
+  SECTION_2: "Interior",
+  SECTION_3: "Detailing",
   TAKEAWAY: "Takeaway",
 };
 
 const SECTION_SHORT: Record<string, string> = {
-  SECTION_1: "S1",
-  SECTION_2: "S2",
-  SECTION_3: "S3",
-  TAKEAWAY: "TW",
+  SECTION_1: "WB",
+  SECTION_2: "INT",
+  SECTION_3: "DET",
+  TAKEAWAY: "TA",
 };
 
 const SECTION_ICONS: Record<string, string> = {
-  SECTION_1: "restaurant-outline",
-  SECTION_2: "restaurant-outline",
-  SECTION_3: "restaurant-outline",
+  SECTION_1: "car-sport-outline",
+  SECTION_2: "car-outline",
+  SECTION_3: "sparkles-outline",
   TAKEAWAY: "bag-handle-outline",
 };
 
@@ -1452,6 +889,17 @@ export default function Category() {
   const [guestNameInput, setGuestNameInput] = useState("");
   const [guestPaxInput, setGuestPaxInput] = useState("");
   const [isSavingGuest, setIsSavingGuest] = useState(false);
+
+  // ── Customer Entry popup (kioskCustomer integration) ──────────────────────
+  const [customerEntryVisible, setCustomerEntryVisible] = useState(false);
+  const [pendingCustomerItem, setPendingCustomerItem] = useState<TableItem | null>(null);
+  const [pendingCustomerTableData, setPendingCustomerTableData] = useState<any>(null);
+  const [carNumberInput, setCarNumberInput] = useState("");
+  const [customerNameInput, setCustomerNameInput] = useState("");
+  const [isSearchingCar, setIsSearchingCar] = useState(false);
+  const [foundCustomerVehicleId, setFoundCustomerVehicleId] = useState<number | null>(null);
+  const [foundCustomerDefaultDishId, setFoundCustomerDefaultDishId] = useState<string | null>(null);
+  const [carSearchError, setCarSearchError] = useState<string | null>(null);
   const [selectedBusinessDate, setSelectedBusinessDate] = useState<
     string | null
   >(null);
@@ -1636,11 +1084,7 @@ export default function Category() {
   );
   const isWaiter = useAuthStore((s: any) => s.isWaiter);
   const enableKDS = useGeneralSettingsStore((s: any) => s.settings.enableKDS);
-  const enableGuestDetailsPopup = useGeneralSettingsStore((s: any) =>
-    s.settings.enableGuestDetailsPopup !== undefined
-      ? s.settings.enableGuestDetailsPopup
-      : true,
-  );
+  const enableGuestDetailsPopup = false; // Hidden: Table Details popup disabled
 
   const activeOrders = useActiveOrdersStore((s) => s.activeOrders);
   const readyItemsCount = useMemo(() => {
@@ -1856,6 +1300,7 @@ export default function Category() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
       const data = await response.json();
+      console.log("TABLES API DATA:", JSON.stringify(data, null, 2));
       let tablesArray: any[] = [];
       if (Array.isArray(data)) tablesArray = data;
       else if (data?.data && Array.isArray(data.data)) tablesArray = data.data;
@@ -1881,6 +1326,15 @@ export default function Category() {
           entryStatus: item.entryStatus || item.entry_status,
           paymentStatus: Number(item.paymentStatus) || 0,
           customerName: item.customerName || item.CustomerName || null,
+          // carNumber: item.carNumber || item.CarNumber || null,
+          carNumber:
+            item.carNumber ||
+            item.CarNumber ||
+            item.carNo ||
+            item.CarNo ||
+            item.vehicleNumber ||
+            item.VehicleNumber ||
+            null,
           pax: item.pax || item.Pax || null,
           TableType: item.TableType,
           Seats: item.Seats !== undefined && item.Seats !== null ? Number(item.Seats) : undefined,
@@ -1943,6 +1397,7 @@ export default function Category() {
             entryStatus: t.entryStatus ?? undefined,
             paymentStatus: t.paymentStatus ?? 0,
             customerName: t.customerName ?? undefined,
+            carNumber: t.carNumber ?? undefined,
             pax: t.pax ?? undefined,
           };
         });
@@ -2243,6 +1698,156 @@ export default function Category() {
     updateTableStatus(id, 5, name); // Reserved (Use 5 for red locked/reserved state)
   const handleComplete = (id: string) => updateTableStatus(id, 0); // Available
 
+  // ── Customer Entry Handlers ───────────────────────────────────────────────────
+  const [customerSearchResults, setCustomerSearchResults] = useState<any[]>([]);
+  const [chooseCustomerVisible, setChooseCustomerVisible] = useState(false);
+  const [chooseCustomerSearchQuery, setChooseCustomerSearchQuery] = useState("");
+
+  const handleCustomerSearch = async () => {
+    setIsSearchingCar(true);
+    setCarSearchError(null);
+    setCustomerSearchResults([]);
+
+    try {
+      // Fetch ALL active customers for the modal list
+      const res = await fetch(`${API_URL}/api/kiosk-customers`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setCustomerSearchResults(data);
+          setChooseCustomerVisible(true);
+          setChooseCustomerSearchQuery("");
+        } else {
+          setCarSearchError("Customer data invalid.");
+        }
+      } else {
+        setCarSearchError("Search failed.");
+      }
+    } catch (err: any) {
+      setCarSearchError(err.message || "Network error.");
+    } finally {
+      setIsSearchingCar(false);
+    }
+  };
+
+  const handleCustomerContinue = async () => {
+    // If we have inputs, save/update customer in backend
+    let customerVehicleId = foundCustomerVehicleId;
+    if (carNumberInput.trim()) {
+      try {
+        if (!foundCustomerVehicleId) {
+          // Create new record
+          const res = await fetch(`${API_URL}/api/kiosk-customers`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              carNumber: carNumberInput,
+              customerName: customerNameInput,
+              storeId: user?.shop_id || 1,
+              createdBy: user?.username || "POS",
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            customerVehicleId = data.customerVehicleId;
+          }
+        } else {
+          // Update existing record with new name
+          await fetch(`${API_URL}/api/kiosk-customers/${foundCustomerVehicleId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              customerName: customerNameInput,
+              updatedBy: user?.username || "POS",
+            }),
+          });
+        }
+      } catch (err) {
+        console.error("Failed to save/update customer:", err);
+      }
+    }
+
+    // Pass the customer details down via pendingCustomerTableData
+    const tableDataWithCustomer = {
+      ...(pendingCustomerTableData || {}),
+      customerVehicleId: customerVehicleId,
+      customerName: customerNameInput.trim(),
+      carNumber: carNumberInput.trim(),
+    };
+
+    setCustomerEntryVisible(false);
+    if (pendingCustomerItem) {
+      const trimmedCarNumber = carNumberInput.trim();
+      const trimmedCustomerName = customerNameInput.trim();
+      const targetTableId = pendingCustomerItem.id;
+
+      // Save the car number to AsyncStorage keyed by tableId so it persists
+      // across refreshes and only appears on this specific bay card
+      if (trimmedCarNumber) {
+        AsyncStorage.setItem(`car_number_${targetTableId}`, trimmedCarNumber).catch(() => {});
+      }
+
+      await proceedWithTable(pendingCustomerItem, tableDataWithCustomer);
+
+      // Update Bay card immediately with customer details (optimistic update)
+      setAllTables((prev) =>
+        prev.map((table) =>
+          table.id === targetTableId
+            ? {
+              ...table,
+              customerName: trimmedCustomerName,
+              carNumber: trimmedCarNumber,
+            }
+            : table
+        )
+      );
+
+      // Also update the table status store so the card reads the car number immediately
+      if (trimmedCarNumber) {
+        const storeState = useTableStatusStore.getState();
+        const existingTableData = storeState.tableMap[targetTableId];
+        if (existingTableData) {
+          storeState.batchUpdateTableStatus([{
+            ...existingTableData,
+            carNumber: trimmedCarNumber,
+            customerName: trimmedCustomerName || existingTableData.customerName,
+          }]);
+        }
+      }
+
+      // Auto-add Default Dish if one is selected for this customer
+      if (foundCustomerDefaultDishId) {
+        try {
+          const dishRes = await fetch(`${API_URL}/api/menu/dishes/${foundCustomerDefaultDishId}`);
+          if (dishRes.ok) {
+            const dish = await dishRes.json();
+            await useCartStore.getState().addToCartGlobal({
+              id: dish.DishId,
+              name: dish.Name,
+              price: dish.Price,
+              basePrice: dish.Price,
+              categoryName: dish.KitchenTypeName || "KITCHEN",
+              KitchenTypeName: dish.KitchenTypeName,
+              isCombo: dish.IsCombo === 1,
+              isTakeaway: false, // Default to dine-in, gets overridden if context is takeaway
+            } as any); // using 'as any' to satisfy Omit typing flexibly
+          }
+        } catch (err) {
+          console.error("Failed to add default dish to cart:", err);
+        }
+      }
+    }
+
+    // Clear state for next use
+    setPendingCustomerItem(null);
+    setPendingCustomerTableData(null);
+    setCarNumberInput("");
+    setCustomerNameInput("");
+    setFoundCustomerVehicleId(null);
+    setFoundCustomerDefaultDishId(null);
+    setCarSearchError(null);
+  };
+
   const handleTablePress = React.useCallback(
     async (item: TableItem, tableData: any, isCheckoutAction?: boolean) => {
       // Check if user license is expired
@@ -2429,18 +2034,15 @@ export default function Category() {
       }
 
       if (status === 0) {
-        if (enableGuestDetailsPopup) {
-          // Intercept empty table tap to show Guest Name & Pax popup
-          setGuestNameInput("");
-          setGuestPaxInput("");
-          setPendingGuestItem(item);
-          setGuestModalVisible(true);
-          return;
-        } else {
-          // Skip the popup completely and go directly to the order screen when a table is selected.
-          await proceedWithTable(item, tableData);
-          return;
-        }
+        // Intercept empty table tap to show Customer Entry popup
+        setPendingCustomerItem(item);
+        setPendingCustomerTableData(tableData);
+        setCarNumberInput("");
+        setCustomerNameInput("");
+        setFoundCustomerVehicleId(null);
+        setCarSearchError(null);
+        setCustomerEntryVisible(true);
+        return;
       }
 
       await proceedWithTable(item, tableData);
@@ -2768,6 +2370,7 @@ export default function Category() {
           smallFont={smallFont}
           isTabletPortrait={!isLandscape && isTablet}
           backgroundTheme={backgroundTheme}
+          isTablet={isTablet}
         />
       );
     },
@@ -3300,6 +2903,19 @@ export default function Category() {
               isLandscape && { height: 42, paddingVertical: 2, gap: 8 },
             ]}
           >
+            {/* LEFT - Branding Logo */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
+              <View style={{ marginRight: 8 }}>
+                <Ionicons name="car-sport" size={32} color="#1D4ED8" />
+                <Ionicons name="water" size={16} color="#3B82F6" style={{ position: 'absolute', top: -4, right: -4 }} />
+                <Ionicons name="sparkles" size={12} color="#60A5FA" style={{ position: 'absolute', bottom: -2, left: -4 }} />
+              </View>
+              <View>
+                <Text style={{ fontFamily: Fonts.black, fontSize: 18, color: '#1E293B', letterSpacing: 0.5, lineHeight: 20 }}>Car Wash</Text>
+                <Text style={{ fontFamily: Fonts.bold, fontSize: 8, color: '#3B82F6', letterSpacing: 0.5 }}>CLEAN RIDE  •  HAPPY DRIVE</Text>
+              </View>
+            </View>
+
             {/* CENTER — Section Tabs */}
             <ScrollView
               ref={sectionScrollRef}
@@ -3588,6 +3204,19 @@ export default function Category() {
             isLandscape && { height: 42, paddingVertical: 2, gap: 8 },
           ]}
         >
+          {/* LEFT - Branding Logo */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
+            <View style={{ marginRight: 8 }}>
+              <Ionicons name="car-sport" size={32} color="#1D4ED8" />
+              <Ionicons name="water" size={16} color="#3B82F6" style={{ position: 'absolute', top: -4, right: -4 }} />
+              <Ionicons name="sparkles" size={12} color="#60A5FA" style={{ position: 'absolute', bottom: -2, left: -4 }} />
+            </View>
+            <View>
+              <Text style={{ fontFamily: Fonts.black, fontSize: 18, color: '#1E293B', letterSpacing: 0.5, lineHeight: 20 }}>Car Wash</Text>
+              <Text style={{ fontFamily: Fonts.bold, fontSize: 8, color: '#3B82F6', letterSpacing: 0.5 }}>CLEAN RIDE  •  HAPPY DRIVE</Text>
+            </View>
+          </View>
+
           {/* CENTER — Section Tabs */}
           <ScrollView
             ref={sectionScrollRef}
@@ -4790,226 +4419,140 @@ export default function Category() {
         currentAvatarUrl={avatarUrl}
       />
 
-      {/* 〰〰 Section Header Row (Hidden on Mobile Landscape) 〰〰 */}
-      {(!isLandscape || isTablet) && (
-        <View
-          style={[
-            styles.sectionHeader,
-            !isTablet &&
-            isLandscape && { paddingVertical: 4, paddingHorizontal: 14 },
-          ]}
-        >
-          <View style={styles.sectionHeaderLeft}>
-            <View
-              style={[
-                styles.sectionAccentBar,
-                !isTablet && isLandscape && { height: 14 },
-              ]}
-            />
-            <Text
-              style={[
-                styles.sectionHeaderTitle,
-                !isTablet && isLandscape && { fontSize: 13 },
-              ]}
-            >
-              {SECTION_LABELS[activeTab]}
-            </Text>
-            <View
-              style={[
-                styles.sectionCountBadge,
-                !isTablet && isLandscape && { paddingVertical: 1 },
-              ]}
-            >
-              <Text style={styles.sectionCountText}>
-                {currentTables.length} tables
-              </Text>
+      {/* â•â•â•â•â•â•â•â•â•â•â• TABLE GRID â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* CAR WASH BAY GRID */}
+      <ImageBackground
+        source={require('../../assets/images/car_wash1.png')}
+        style={{ flex: 1, width: '100%', height: '100%' }}
+        resizeMode="cover"
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+
+          {/* Stats + Legend Bar */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', flexWrap: 'wrap', gap: 8 }}>
+            {/* Total Bays */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 16, borderRightWidth: 1, borderRightColor: '#E5E7EB' }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="car" size={18} color="#3B82F6" />
+              </View>
+              <View>
+                <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: '#64748B' }}>Total Bays</Text>
+                <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: '#1E293B', marginTop: -2 }}>{currentTables.length}</Text>
+              </View>
             </View>
-            {occupiedCount > 0 && (
-              <View
-                style={[
-                  styles.occupiedBadge,
-                  !isTablet && isLandscape && { paddingVertical: 1 },
-                ]}
-              >
-                <View style={styles.occupiedDot} />
-                <Text style={styles.occupiedText}>
-                  {occupiedCount} occupied
+            {/* Occupied */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, borderRightWidth: 1, borderRightColor: '#E5E7EB' }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#DBEAFE', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="car-sport" size={18} color="#3B82F6" />
+              </View>
+              <View>
+                <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: '#64748B' }}>Occupied</Text>
+                <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: '#1E293B', marginTop: -2 }}>
+                  {currentTables.filter(t => { const s = tableMap[t.id]?.status; return s === 'SENT' || s === 'BILL_REQUESTED' || s === 'HOLD' || s === 'LOCKED'; }).length}
                 </Text>
               </View>
-            )}
-          </View>
+            </View>
+            {/* Available */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16 }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="car" size={18} color="#94A3B8" />
+              </View>
+              <View>
+                <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: '#64748B' }}>Available</Text>
+                <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: '#1E293B', marginTop: -2 }}>
+                  {currentTables.filter(t => { const s = tableMap[t.id]?.status; return !s || s === 'EMPTY'; }).length || currentTables.filter(t => Number(t.Status) === 0).length}
+                </Text>
+              </View>
+            </View>
 
-          {/* Legend - Only show on tablets directly on screen */}
-          {isTablet && (
-            <View style={styles.legend}>
+            {/* Legend */}
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
               {[
-                { color: "#81C995", label: "Dining" },
-                { color: "#93C5FD", label: "Hold" },
-                { color: "#FCD34D", label: "Checkout" },
-                { color: "#FCA5A5", label: "Reserved" },
-                { color: "#C084FC", label: "Overtime" },
-              ].map((item) => (
-                <View key={item.label} style={styles.legendItem}>
-                  <View
-                    style={[styles.legendDot, { backgroundColor: item.color }]}
-                  />
-                  <Text style={styles.legendText}>{item.label}</Text>
+                { color: '#3B82F6', label: 'Washing' },
+                { color: '#F97316', label: 'Waiting' },
+                { color: '#22C55E', label: 'Completed' },
+                { color: '#94A3B8', label: 'Available' },
+              ].map(({ color, label }) => (
+                <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
+                  <Text style={{ fontFamily: Fonts.medium, fontSize: 11, color: '#64748B' }}>{label}</Text>
                 </View>
               ))}
             </View>
-          )}
+          </View>
+
+          {/* Bay Grid */}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingBottom: isTablet ? 160 : 100,
+              minHeight: (() => {
+                let maxBottom = 0;
+                currentTables.forEach((item, index) => {
+                  const ySize = item.YSize && Number(item.YSize) > 0 ? Number(item.YSize) : 200;
+                  const defaultY = 14 + Math.floor(index / 7) * (200 + 12);
+                  const finalY = item.YPos !== undefined && item.YPos !== null && item.YPos > 0 ? item.YPos : defaultY;
+                  if (finalY + ySize > maxBottom) maxBottom = finalY + ySize;
+                });
+                return Math.max(600, maxBottom + 50);
+              })()
+            }}
+          >
+            {currentTables.length === 0 ? (
+              <View style={[styles.emptyContainer, { width: '100%', marginTop: 20 }]}>
+                <Ionicons name="car-sport-outline" size={48} color={Theme.border} />
+                <Text style={styles.emptyText}>No wash bays found</Text>
+                <TouchableOpacity onPress={fetchTables} style={styles.retryBtn}>
+                  <Ionicons name="refresh-outline" size={16} color={Theme.primary} />
+                  <Text style={styles.retryText}>Refresh</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={{ width: '100%', height: '100%', position: 'relative' }}>
+                {currentTables.map((item, index) => {
+                  // Apply 7-column grid fallback if coordinates are missing
+                  const COLS = 7;
+                  const CARD_W = 150;
+                  const CARD_H = 200;
+                  const GAP = 12;
+                  const OFFSET_X = 14;
+                  const OFFSET_Y = 14;
+
+                  const defaultX = OFFSET_X + (index % COLS) * (CARD_W + GAP);
+                  const defaultY = OFFSET_Y + Math.floor(index / COLS) * (CARD_H + GAP);
+
+                  const computedItem = {
+                    ...item,
+                    XPos: item.XPos !== undefined && item.XPos !== null && item.XPos > 0 ? item.XPos : defaultX,
+                    YPos: item.YPos !== undefined && item.YPos !== null && item.YPos > 0 ? item.YPos : defaultY,
+                  };
+
+                  return (
+                    <TableItemComponent
+                      key={item.id}
+                      tableId={item.id}
+                      item={computedItem}
+                      itemSize={isTablet ? 180 : 150}
+                      activeTab={activeTab}
+                      onPress={handleTablePress}
+                      numberFont={numberFont}
+                      smallFont={smallFont}
+                      isTabletPortrait={!isLandscape && isTablet}
+                      backgroundTheme={backgroundTheme}
+                      isTablet={isTablet}
+                      isAbsoluteLayout={true}
+                      layoutScale={1}
+                    />
+                  );
+                })}
+              </View>
+            )}
+          </ScrollView>
+
+
         </View>
-      )}
+      </ImageBackground>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â• TABLE GRID â•â•â•â•â•â•â•â•â•â•â• */}
-      {/* ═════════════ TABLE VISUAL FLOOR MAP ═════════════ */}
-      {/* ═════════════ TABLE LAYOUT RENDERER ═════════════ */}
-      {!hasCustomLayout ? (
-        <FlatList
-          data={currentTables}
-          key={columns}
-          numColumns={columns}
-          keyExtractor={(item: TableItem) => item.id}
-          renderItem={renderItem}
-          columnWrapperStyle={{ gap: GAP }}
-          getItemLayout={(data, index) => ({
-            length: itemSize + GAP,
-            offset: (itemSize + GAP) * Math.floor(index / columns),
-            index,
-          })}
-          removeClippedSubviews={Platform.OS !== "web"}
-          maxToRenderPerBatch={isTablet ? 20 : 10}
-          windowSize={3}
-          initialNumToRender={isTablet ? 30 : 15}
-          contentContainerStyle={{
-            gap: GAP,
-            paddingHorizontal: PADDING,
-            paddingBottom: isTablet ? 160 : 100,
-            paddingTop: 8,
-          }}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="grid-outline" size={48} color={Theme.border} />
-              <Text style={styles.emptyText}>No tables found</Text>
-              <TouchableOpacity onPress={fetchTables} style={styles.retryBtn}>
-                <Ionicons
-                  name="refresh-outline"
-                  size={16}
-                  color={Theme.primary}
-                />
-                <Text style={styles.retryText}>Refresh</Text>
-              </TouchableOpacity>
-            </View>
-          }
-        />
-      ) : (
-        <View style={{ flex: 1 }}>
-          {currentTables.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="grid-outline" size={48} color={Theme.border} />
-              <Text style={styles.emptyText}>No tables found</Text>
-              <TouchableOpacity onPress={fetchTables} style={styles.retryBtn}>
-                <Ionicons
-                  name="refresh-outline"
-                  size={16}
-                  color={Theme.primary}
-                />
-                <Text style={styles.retryText}>Refresh</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={{ flex: 1 }} onLayout={onContainerLayout}>
-              <ScrollView 
-                contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
-                showsVerticalScrollIndicator={false}
-                style={{ flex: 1 }}
-              >
-                <CanvasBackground
-                  theme={backgroundTheme}
-                  style={{
-                    width: availableWidth,
-                    height: canvasHeight * (availableWidth / 780),
-                    borderRadius: 16,
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                  isCategory={true}
-                >
-                  {/* Subtle floor grid lines to align layout */}
-                  {(() => {
-                    let gridLineColor = "rgba(232, 224, 213, 0.4)";
-                    if (backgroundTheme === "dark") gridLineColor = "rgba(255, 255, 255, 0.04)";
-                    if (backgroundTheme === "emerald") gridLineColor = "rgba(255, 255, 255, 0.05)";
-                    if (backgroundTheme === "grey") gridLineColor = "rgba(0, 0, 0, 0.06)";
-                    if (backgroundTheme === "wood") gridLineColor = "rgba(255, 255, 255, 0.07)";
-                    if (backgroundTheme === "light") gridLineColor = "rgba(0, 0, 0, 0.04)";
-
-                    return (
-                      <View style={{
-                        position: "absolute",
-                        top: 0, left: 0, right: 0, bottom: 0,
-                      }} pointerEvents="none">
-                        {Array.from({ length: 25 }).map((_, i) => (
-                          <View key={`grid-h-${i}`} style={{
-                            position: "absolute",
-                            left: 0, right: 0, height: 1,
-                            backgroundColor: gridLineColor,
-                            top: (i + 1) * 30 * (availableWidth / 780)
-                          }} />
-                        ))}
-                        {Array.from({ length: 32 }).map((_, i) => (
-                          <View key={`grid-v-${i}`} style={{
-                            position: "absolute",
-                            top: 0, bottom: 0, width: 1,
-                            backgroundColor: gridLineColor,
-                            left: (i + 1) * 30 * (availableWidth / 780)
-                          }} />
-                        ))}
-                      </View>
-                    );
-                  })()}
-
-                  {/* Render each Table component placed absolute */}
-                  {(() => {
-                    const layoutScale = availableWidth / 780;
-
-                    return currentTables.map((item, index) => {
-                      const defaultX = (item.XPos || 30 + (index % 4) * 170) * layoutScale;
-                      const defaultY = (item.YPos || 30 + Math.floor(index / 4) * 130) * layoutScale;
-
-                      return (
-                        <View
-                          key={item.id}
-                          style={{
-                            position: "absolute",
-                            left: defaultX,
-                            top: defaultY,
-                          }}
-                        >
-                          <TableItemComponent
-                            tableId={item.id}
-                            item={item}
-                            itemSize={90}
-                            activeTab={activeTab}
-                            onPress={handleTablePress}
-                            numberFont={numberFont}
-                            smallFont={smallFont}
-                            isTabletPortrait={!isLandscape && isTablet}
-                            isAbsoluteLayout={true}
-                            layoutScale={layoutScale}
-                            backgroundTheme={backgroundTheme}
-                          />
-                        </View>
-                      );
-                    });
-                  })()}
-                </CanvasBackground>
-              </ScrollView>
-            </View>
-        )}
-      </View>
-    )}
       {/* 〰〰〰〰〰〰〰〰〰〰〰 CUSTOMER GUEST & PAX MODAL 〰〰〰〰〰〰〰〰〰〰〰 */}
       <Modal
         visible={guestModalVisible}
@@ -5178,6 +4721,173 @@ export default function Category() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* ════════════════════════════════════════════════════════════
+           CUSTOMER ENTRY MODAL (Kiosk Customer)
+      ════════════════════════════════════════════════════════════ */}
+      <Modal visible={customerEntryVisible} transparent={true} animationType="fade">
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}
+          activeOpacity={1}
+          onPress={() => setCustomerEntryVisible(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={{ width: 340, backgroundColor: "#FFF", borderRadius: 16, padding: 24 }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 24, position: "relative" }}>
+              <Text style={{ fontFamily: Fonts.black, fontSize: 22, color: "#1E293B" }}>Customer Entry</Text>
+              <TouchableOpacity
+                style={{ position: "absolute", right: -8, top: -8, padding: 8 }}
+                onPress={() => setCustomerEntryVisible(false)}
+              >
+                <Ionicons name="close" size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Car Number */}
+            <Text style={{ fontFamily: Fonts.bold, fontSize: 14, color: "#334155", marginBottom: 8 }}>Car Number</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, marginBottom: 4, height: 48, overflow: "hidden" }}>
+              <TextInput
+                style={{ flex: 1, height: "100%", paddingHorizontal: 12, fontFamily: Fonts.medium, fontSize: 14, color: "#1E293B" }}
+                placeholder="Enter car number"
+                placeholderTextColor="#94A3B8"
+                value={carNumberInput}
+                onChangeText={setCarNumberInput}
+                autoCapitalize="characters"
+              />
+              <TouchableOpacity
+                style={{ backgroundColor: Theme.primary, height: "100%", paddingHorizontal: 16, justifyContent: "center", alignItems: "center" }}
+                onPress={handleCustomerSearch}
+                disabled={isSearchingCar}
+              >
+                <Text style={{ color: "#FFF", fontFamily: Fonts.bold, fontSize: 13 }}>
+                  {isSearchingCar ? "..." : "Search"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {carSearchError ? (
+              <Text style={{ fontFamily: Fonts.medium, fontSize: 12, color: "#EF4444", marginBottom: 12, marginLeft: 4 }}>
+                {carSearchError}
+              </Text>
+            ) : (
+              <View style={{ height: 16 }} />
+            )}
+
+            {/* Customer Name */}
+            <Text style={{ fontFamily: Fonts.bold, fontSize: 14, color: "#334155", marginBottom: 8 }}>Customer Name</Text>
+            <TextInput
+              style={{ borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, height: 48, paddingHorizontal: 12, fontFamily: Fonts.medium, fontSize: 14, color: "#1E293B", marginBottom: 24 }}
+              placeholder="Enter customer name"
+              placeholderTextColor="#94A3B8"
+              value={customerNameInput}
+              onChangeText={setCustomerNameInput}
+            />
+
+            {/* Continue Button */}
+            <TouchableOpacity
+              style={{ backgroundColor: Theme.primary, borderRadius: 8, height: 48, justifyContent: "center", alignItems: "center" }}
+              onPress={handleCustomerContinue}
+            >
+              <Text style={{ color: "#FFF", fontFamily: Fonts.bold, fontSize: 16 }}>Continue</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* ════════════════════════════════════════════════════════════
+           CHOOSE CUSTOMER MODAL
+      ════════════════════════════════════════════════════════════ */}
+      <Modal visible={chooseCustomerVisible} transparent={true} animationType="fade">
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "center", alignItems: "center" }}
+          activeOpacity={1}
+          onPress={() => setChooseCustomerVisible(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={{ width: 360, backgroundColor: "#FFF", borderRadius: 20, paddingTop: 24, overflow: "hidden" }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 20, paddingHorizontal: 24, position: "relative" }}>
+              <Text style={{ fontFamily: Fonts.black, fontSize: 24, color: "#1E293B" }}>Choose Customer</Text>
+              <TouchableOpacity
+                style={{ position: "absolute", right: 8, top: -4, padding: 8 }}
+                onPress={() => setChooseCustomerVisible(false)}
+              >
+                <Text style={{ fontSize: 20, color: "#1E293B", fontFamily: Fonts.bold }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Search Field */}
+            <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 2, borderColor: Theme.primary, borderRadius: 10, height: 50, paddingHorizontal: 14, backgroundColor: "#FFF" }}>
+                <Ionicons name="search-outline" size={18} color="#94A3B8" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={{ flex: 1, fontFamily: Fonts.medium, fontSize: 14, color: "#1E293B" }}
+                  placeholder="Search by car number..."
+                  placeholderTextColor="#94A3B8"
+                  value={chooseCustomerSearchQuery}
+                  onChangeText={setChooseCustomerSearchQuery}
+                  autoCapitalize="characters"
+                />
+              </View>
+            </View>
+
+            {/* Table Header */}
+            <View style={{ flexDirection: "row", backgroundColor: "#F1EFE9", paddingVertical: 12, paddingHorizontal: 20 }}>
+              <Text style={{ flex: 1, fontFamily: Fonts.black, fontSize: 12, color: "#64748B", letterSpacing: 0.8, textTransform: "uppercase" }}>Customer Name</Text>
+              <Text style={{ flex: 1, fontFamily: Fonts.black, fontSize: 12, color: "#64748B", letterSpacing: 0.8, textTransform: "uppercase" }}>Car Number</Text>
+            </View>
+
+            {/* Table Rows */}
+            <ScrollView style={{ maxHeight: 280 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+              {(() => {
+                const filtered = customerSearchResults.filter(c =>
+                  !chooseCustomerSearchQuery.trim() ||
+                  (c.CarNumber || "").toUpperCase().includes(chooseCustomerSearchQuery.trim().toUpperCase())
+                );
+                if (filtered.length === 0) {
+                  return (
+                    <View style={{ padding: 32, alignItems: "center" }}>
+                      <Text style={{ fontFamily: Fonts.medium, fontSize: 14, color: "#94A3B8" }}>No customers found.</Text>
+                    </View>
+                  );
+                }
+                return filtered.map((cust, idx, arr) => (
+                  <TouchableOpacity
+                    key={cust.CustomerVehicleId || idx}
+                    style={{
+                      flexDirection: "row",
+                      paddingVertical: 14,
+                      paddingHorizontal: 20,
+                      borderBottomWidth: idx < arr.length - 1 ? 1 : 0,
+                      borderBottomColor: "#E2E8F0",
+                      backgroundColor: foundCustomerVehicleId === cust.CustomerVehicleId ? "#FFF7F0" : "#FFF",
+                    }}
+                    onPress={() => {
+                      setFoundCustomerVehicleId(cust.CustomerVehicleId);
+                      setFoundCustomerDefaultDishId(cust.DefaultDishId || null);
+                      setCarNumberInput(cust.CarNumber || "");
+                      setCustomerNameInput(cust.CustomerName || "");
+                      setChooseCustomerVisible(false);
+                    }}
+                  >
+                    <Text style={{ flex: 1, fontFamily: Fonts.medium, fontSize: 15, color: "#1E293B" }}>{cust.CustomerName || "—"}</Text>
+                    <Text style={{ flex: 1, fontFamily: Fonts.medium, fontSize: 15, color: "#1E293B" }}>{cust.CarNumber || "—"}</Text>
+                  </TouchableOpacity>
+                ));
+              })()}
+            </ScrollView>
+            <View style={{ height: 16 }} />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
 
       {/* ════════════════════════════════════════════════════════════
            MOVE TABLE MODAL
@@ -5886,7 +5596,7 @@ export default function Category() {
           style={[
             styles.floatingAiBtn,
             {
-              bottom: Math.max(insets.bottom, 16) + 16,
+              bottom: Math.max(insets.bottom, 16) + 80,
               right: Math.max(insets.right, 16) + 16,
             },
           ]}
