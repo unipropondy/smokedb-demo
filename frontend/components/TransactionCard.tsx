@@ -83,11 +83,11 @@ const TransactionCard = React.memo(
                 : isUpi
                 ? "#a855f7"
                 : isYeahpayPaynow
-                ? "#f97316"
+                ? "#3B82F6"
                 : isYeahpayCard
                 ? "#818cf8"
                 : isPayNow
-                ? "#f97316"
+                ? "#3B82F6"
                 : isNets
                 ? "#3b82f6"
                 : "#818cf8"

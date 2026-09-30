@@ -610,8 +610,8 @@ export default function CustomerCartScreen() {
               
               {applyPromo && discountAmt > 0 && (
                 <View style={styles.billRow}>
-                  <Text style={[styles.billLabel, { color: "#FF5E1A", fontWeight: "700" }]}>Promo Discount ({activePromoCode})</Text>
-                  <Text style={[styles.billValue, { color: "#FF5E1A", fontWeight: "700" }]}>-{currencySymbol}{discountAmt.toFixed(2)}</Text>
+                  <Text style={[styles.billLabel, { color: "#3B82F6", fontWeight: "700" }]}>Promo Discount ({activePromoCode})</Text>
+                  <Text style={[styles.billValue, { color: "#3B82F6", fontWeight: "700" }]}>-{currencySymbol}{discountAmt.toFixed(2)}</Text>
                 </View>
               )}
               {serviceChargePercentage > 0 && (

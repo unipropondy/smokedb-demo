@@ -252,14 +252,14 @@ export default function KitchenStatusScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F0EBE3" }, // Warm Stone background to match Theme.bgMuted
+  safe: { flex: 1, backgroundColor: Theme.bgMain },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 18,
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.bgCard,
     borderBottomWidth: 1,
     borderBottomColor: Theme.border,
     ...Theme.shadowSm,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   list: { padding: 16, paddingBottom: 60 },
   columnWrapper: { gap: 16 },
   orderCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.bgCard,
     borderRadius: 24,
     marginBottom: 16,
     borderWidth: 1,
@@ -300,14 +300,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.border + "50",
   },
-  headerDineIn: { backgroundColor: "#F0F9FF" }, // Soft Blue
-  headerTakeaway: { backgroundColor: "#FFFBEB" }, // Soft Amber
+  headerDineIn: { backgroundColor: Theme.bgMuted },
+  headerTakeaway: { backgroundColor: Theme.bgMuted },
   headerInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconCircle: {
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.bgMain,
     alignItems: "center",
     justifyContent: "center",
     ...Theme.shadowSm,
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     color: Theme.primary,
   },
   orderStats: {
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.bgMain,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Theme.border + "50",
   },
   itemReadyRow: {
-    backgroundColor: "#F0FDF4",
+    backgroundColor: Theme.bgMuted,
     marginHorizontal: -16,
     paddingHorizontal: 16,
   },
@@ -392,8 +392,8 @@ const styles = StyleSheet.create({
     minWidth: 90,
     justifyContent: "center",
   },
-  statusBadgePrep: { backgroundColor: "#3B82F6" },
-  statusBadgeReady: { backgroundColor: "#22C55E" },
+  statusBadgePrep: { backgroundColor: Theme.info },
+  statusBadgeReady: { backgroundColor: Theme.success },
   statusBadgeText: {
     color: "#FFF",
     fontSize: 10,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: Theme.primary, // Brand Primary
+    backgroundColor: Theme.primary, // Brand Orange
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 6,
     marginLeft: 34,
-    backgroundColor: '#FFF5F5',
+    backgroundColor: Theme.bgMuted,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.bgCard,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,

@@ -768,7 +768,7 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 25, paddingVertical: 8,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: Theme.border,
+    backgroundColor: Theme.bgCard, borderBottomWidth: 1, borderBottomColor: Theme.border,
     ...Theme.shadowSm,
   },
   backBtn: {
@@ -791,7 +791,7 @@ const styles = StyleSheet.create({
   legendText: { fontSize: 12, fontFamily: Fonts.bold, color: Theme.textSecondary },
   statChip: {
     flexDirection: "row", alignItems: "center", gap: 6,
-    backgroundColor: "#FFF", borderRadius: 20,
+    backgroundColor: Theme.bgCard, borderRadius: 20,
     paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1,
   },
   statDot: { width: 9, height: 9, borderRadius: 5 },
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 5,
     alignSelf: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.bgCard,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -968,7 +968,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: "100%",
     maxWidth: 600,
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.bgCard,
     borderRadius: 24,
     padding: 20,
     ...Theme.shadowLg,

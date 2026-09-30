@@ -443,8 +443,8 @@ export default function PaymentSuccess() {
 
             {parseFloat(String(params.rewardPointsEarned || "0")) > 0 ? (
               <View style={[styles.row, { paddingVertical: 4, paddingHorizontal: 8, backgroundColor: "#FFF7ED", borderRadius: 8 }]}>
-                <Text style={[styles.label, { color: "#F97316", fontFamily: Fonts.bold }]}>Points Earned</Text>
-                <Text style={[styles.value, { color: "#F97316" }]}>+${parseFloat(String(params.rewardPointsEarned)).toFixed(2)}</Text>
+                <Text style={[styles.label, { color: "#3B82F6", fontFamily: Fonts.bold }]}>Points Earned</Text>
+                <Text style={[styles.value, { color: "#3B82F6" }]}>+${parseFloat(String(params.rewardPointsEarned)).toFixed(2)}</Text>
               </View>
             ) : null}
 

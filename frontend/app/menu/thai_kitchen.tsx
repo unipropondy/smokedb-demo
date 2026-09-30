@@ -135,10 +135,10 @@ const DishCard = React.memo(
           {
             width,
             padding: 10,
-            backgroundColor: "#151B21",
+            backgroundColor: Theme.bgCard,
             borderRadius: 18,
             borderWidth: 1,
-            borderColor: isSC ? Theme.dangerBorder : "#e0e0dfff",
+            borderColor: isSC ? Theme.dangerBorder : Theme.border,
             overflow: "hidden",
             marginBottom: 4,
             flexDirection: "column",
@@ -154,29 +154,29 @@ const DishCard = React.memo(
       >
         {/* CART QUANTITY BADGE */}
         {cartQty > 0 && (
-          <View style={{ position: "absolute", top: 8, right: 8, zIndex: 20, minWidth: 27, height: 27, borderRadius: 14, backgroundColor: "#FF6B00", justifyContent: "center", alignItems: "center", paddingHorizontal: 6, elevation: 5 }}>
-            <Text style={{ color: "#FFFFFF", fontSize: 12, fontFamily: Fonts.bold }}>{cartQty}</Text>
+          <View style={{ position: "absolute", top: 8, right: 8, zIndex: 20, minWidth: 27, height: 27, borderRadius: 14, backgroundColor: Theme.primary, justifyContent: "center", alignItems: "center", paddingHorizontal: 6, elevation: 5 }}>
+            <Text style={{ color: Theme.textInverse, fontSize: 12, fontFamily: Fonts.bold }}>{cartQty}</Text>
           </View>
         )}
 
         {/* DISH IMAGE */}
-        <View style={{ width: "100%", height: isPhone ? (isLandscape ? 75 : 95) : (isTablet ? 110 : 120), borderRadius: 13, overflow: "hidden", backgroundColor: "#202830", marginBottom: 10 }}>
+        <View style={{ width: "100%", height: isPhone ? (isLandscape ? 75 : 95) : (isTablet ? 110 : 120), borderRadius: 13, overflow: "hidden", backgroundColor: Theme.bgMuted, marginBottom: 10 }}>
           {dish.Image ? (
             <Image source={{ uri: `${IMAGE_BASE_URL}${dish.Image}` }} style={{ width: "100%", height: "100%" }} contentFit="cover" transition={150} />
           ) : (
-            <View style={{ width: "100%", height: "100%", justifyContent: "center", alignItems: "center", backgroundColor: "#202830" }}>
-              <Ionicons name="restaurant-outline" size={isPhone ? 35 : 48} color="#7F8A96" />
+            <View style={{ width: "100%", height: "100%", justifyContent: "center", alignItems: "center", backgroundColor: Theme.bgMuted }}>
+              <Ionicons name="restaurant-outline" size={isPhone ? 35 : 48} color={Theme.textSecondary} />
             </View>
           )}
           {isSoldOut && (
             <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.58)", justifyContent: "center", alignItems: "center" }}>
-              <Text style={{ color: "#FFFFFF", fontSize: 14, fontFamily: Fonts.bold }}>SOLD OUT</Text>
+              <Text style={{ color: Theme.textInverse, fontSize: 14, fontFamily: Fonts.bold }}>SOLD OUT</Text>
             </View>
           )}
         </View>
 
         {/* DISH NAME - single line, fixed height */}
-        <Text style={{ color: "#FFFFFF", fontSize: isPhone ? 12 : 13, fontFamily: Fonts.bold, textAlign: "left", marginBottom: 4, height: isPhone ? 18 : 20 }} numberOfLines={1}>
+        <Text style={{ color: Theme.textPrimary, fontSize: isPhone ? 12 : 13, fontFamily: Fonts.bold, textAlign: "left", marginBottom: 4, height: isPhone ? 18 : 20 }} numberOfLines={1}>
           {dish.Name}
         </Text>
 
@@ -580,7 +580,7 @@ export default function MenuScreen() {
       style={[
         styles.topBar,
         {
-          backgroundColor: "#0B1015",
+          backgroundColor: Theme.bgMain,
           paddingVertical: 10,
         },
         isPhone && isLandscape && {
@@ -597,9 +597,9 @@ export default function MenuScreen() {
         style={[
           styles.backBtn,
           {
-            backgroundColor: "#171D23",
+            backgroundColor: Theme.bgMuted,
             borderWidth: 1,
-            borderColor: "#303840",
+            borderColor: Theme.border,
             borderRadius: 14,
           },
           isPhone &&
@@ -613,7 +613,7 @@ export default function MenuScreen() {
         <Ionicons
           name="arrow-back"
           size={isPhone && isLandscape ? 20 : 26}
-          color="#FFFFFF"
+          color="#374151"
         />
       </TouchableOpacity>
 
@@ -622,9 +622,9 @@ export default function MenuScreen() {
         style={[
           styles.searchWrap,
           {
-            backgroundColor: "#171D23",
+            backgroundColor: Theme.bgMuted,
             borderWidth: 1,
-            borderColor: "#303840",
+            borderColor: Theme.border,
             borderRadius: 15,
             height: 54,
           },
@@ -638,7 +638,7 @@ export default function MenuScreen() {
         <Ionicons
           name="search"
           size={isPhone && isLandscape ? 17 : 22}
-          color="#8995A3"
+          color={Theme.textSecondary}
           style={styles.searchIcon}
         />
 
@@ -646,7 +646,7 @@ export default function MenuScreen() {
           style={[
             styles.searchInput,
             {
-              color: "#FFFFFF",
+              color: Theme.textPrimary,
             },
             isPhone &&
             isLandscape && {
@@ -654,7 +654,7 @@ export default function MenuScreen() {
             },
           ]}
           placeholder="Search menu or items..."
-          placeholderTextColor="#8995A3"
+          placeholderTextColor={Theme.textSecondary}
           value={searchText}
           onChangeText={setSearchText}
         />
@@ -664,7 +664,7 @@ export default function MenuScreen() {
             <Ionicons
               name="close-circle"
               size={18}
-              color="#8995A3"
+              color={Theme.textSecondary}
             />
           </TouchableOpacity>
         )}
@@ -687,9 +687,9 @@ export default function MenuScreen() {
           style={[
             styles.headerBillBtn,
             {
-              backgroundColor: "#11171D",
+              backgroundColor: Theme.bgCard,
               borderWidth: 1,
-              borderColor: "#303840",
+              borderColor: Theme.border,
               borderRadius: 14,
             },
             isPhone &&
@@ -714,7 +714,7 @@ export default function MenuScreen() {
             <Ionicons
               name="refresh-outline"
               size={isPhone && isLandscape ? 20 : 25}
-              color="#FFFFFF"
+              color="#374151"
             />
           )}
         </TouchableOpacity>
@@ -724,9 +724,9 @@ export default function MenuScreen() {
           style={[
             styles.headerBillBtn,
             {
-              backgroundColor: "#11171D",
+              backgroundColor: Theme.bgCard,
               borderWidth: 1,
-              borderColor: "#303840",
+              borderColor: Theme.border,
               borderRadius: 14,
             },
             isPhone &&
@@ -741,7 +741,7 @@ export default function MenuScreen() {
           <Ionicons
             name="receipt-outline"
             size={isPhone && isLandscape ? 20 : 25}
-            color="#FFFFFF"
+            color="#374151"
           />
         </TouchableOpacity>
 
@@ -750,9 +750,9 @@ export default function MenuScreen() {
           style={[
             styles.headerCartBtn,
             {
-              backgroundColor: "#11171D",
+              backgroundColor: Theme.bgCard,
               borderWidth: 1,
-              borderColor: "#303840",
+              borderColor: Theme.border,
               borderRadius: 14,
             },
             isPhone &&
@@ -767,7 +767,7 @@ export default function MenuScreen() {
           <Ionicons
             name={showCart ? "cart" : "cart-outline"}
             size={isPhone && isLandscape ? 18 : 22}
-            color="#FFFFFF"
+            color="#374151"
           />
 
           <CartBadge
@@ -1409,7 +1409,7 @@ export default function MenuScreen() {
             {showCart && <CartSidebar width={cartWidth} />}
           </View>
         ) : (
-          <View style={{ flex: 1, backgroundColor: "#0B1015" }}>
+          <View style={{ flex: 1, backgroundColor: Theme.bgMain }}>
             {/* TAB/PHONE LAYOUT - Hawker Style */}
             <View style={{ padding: isPhone ? 10 : 20, paddingBottom: 0 }}>
               {renderTopBar()}
@@ -2079,7 +2079,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#0B1015",
+    borderBottomColor: Theme.border,
     gap: 12,
   },
   reprintText: {
@@ -2094,12 +2094,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  safe: { flex: 1, backgroundColor: "#0B1015" },
+  safe: { flex: 1, backgroundColor: Theme.bgMain },
   layout: { flex: 1, flexDirection: "row" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   rail: {
     width: 90,
-    backgroundColor: "#fff",
+    backgroundColor: Theme.bgCard,
     borderRightWidth: 1,
     borderRightColor: Theme.border,
     alignItems: "center",
@@ -2113,7 +2113,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 16,
   },
-  railItemActive: { backgroundColor: "#0B1015" },
+  railItemActive: { backgroundColor: Theme.bgMuted },
   railLabel: {
     fontSize: 10,
     fontFamily: Fonts.bold,
@@ -2144,7 +2144,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#fff",
+    backgroundColor: Theme.bgCard,
     justifyContent: "center",
     alignItems: "center",
     ...Theme.shadowSm,
@@ -2152,7 +2152,7 @@ const styles = StyleSheet.create({
   searchWrap: {
     flex: 0.7,
     height: 48,
-    backgroundColor: "#fff",
+    backgroundColor: Theme.bgCard,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Theme.border,
@@ -2174,65 +2174,65 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#fff",
+    backgroundColor: Theme.bgCard,
     justifyContent: "center",
     alignItems: "center",
     ...Theme.shadowSm,
   },
   categoryNavigation: {
     marginBottom: 15,
-    backgroundColor: "#0B1015",
+    backgroundColor: Theme.bgNav,
     paddingVertical: 8,
+    borderRadius: 12,
+    paddingHorizontal: 8,
   },
   catScroll: { gap: 10 },
   catPill: {
     paddingHorizontal: 20,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "transparent",
+    backgroundColor: Theme.bgMuted,
     borderWidth: 1.5,
-    borderColor: "#dededeff",
+    borderColor: Theme.border,
     justifyContent: "center",
     alignItems: "center",
   },
   catPillActive: {
-    backgroundColor: "transparent",
-    borderColor: "rgba(229, 229, 229, 1)ff",
+    backgroundColor: Theme.primary + "20",
+    borderColor: Theme.primary,
     borderWidth: 2,
   },
   catText: {
     fontSize: 14,
     fontFamily: Fonts.bold,
-    color: "#AAB4C0",
+    color: Theme.textSecondary,
   },
-
   catTextActive: {
-    color: "rgba(229, 229, 229, 1)ff",
+    color: Theme.primary,
   },
   groupScroll: { gap: 8 },
   groupPill: {
     paddingHorizontal: 16,
     height: 38,
     borderRadius: full,
-    backgroundColor: "transparent",
+    backgroundColor: Theme.bgMuted,
     borderWidth: 1.5,
-    borderColor: "#eeeeeeff",
+    borderColor: Theme.border,
     justifyContent: "center",
     alignItems: "center",
   },
   groupPillActive: {
-    backgroundColor: "transparent",
+    backgroundColor: Theme.primary + "20",
     borderWidth: 2,
-    borderColor: "#f0f0f0ff",
+    borderColor: Theme.primary,
   },
   groupText: {
     fontSize: 12,
     fontFamily: Fonts.medium,
-    color: "#AAB4C0",
+    color: Theme.textSecondary,
   },
-
   groupTextActive: {
-    color: "#f3f3f3ff",
+    color: Theme.primary,
     fontFamily: Fonts.bold,
   },
   gridContainer: { flex: 1, minHeight: 0 },
@@ -2242,19 +2242,19 @@ const styles = StyleSheet.create({
   },
   card: {
     position: "relative",
-    backgroundColor: "#151B21",
+    backgroundColor: Theme.bgCard,
     borderRadius: 16,
     padding: 8,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#2A323B",
+    borderColor: Theme.border,
     overflow: "hidden",
   },
   qtyBadge: {
     position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: "#FF6B00",
+    backgroundColor: Theme.primary,
     width: 30,
     height: 30,
     borderRadius: 15,
@@ -2281,7 +2281,7 @@ const styles = StyleSheet.create({
   dishName: {
     fontSize: 14,
     fontFamily: Fonts.black,
-    color: "#FFFFFF",
+    color: Theme.textPrimary,
     textAlign: "center",
     minHeight: 36,
     lineHeight: 18,
@@ -2290,13 +2290,13 @@ const styles = StyleSheet.create({
   dishPrice: {
     fontSize: 15,
     fontFamily: Fonts.black,
-    color: "#FF6B00",
+    color: Theme.primary,
     marginTop: 6,
   },
   headerCartBtn: {
     width: 48,
     height: 48,
-    backgroundColor: "#0B1015",
+    backgroundColor: Theme.bgMuted,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
@@ -2307,7 +2307,7 @@ const styles = StyleSheet.create({
   headerBillBtn: {
     width: 48,
     height: 48,
-    backgroundColor: "#0B1015",
+    backgroundColor: Theme.bgMain,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
@@ -2466,7 +2466,7 @@ const styles = StyleSheet.create({
   },
   customInput: {
     height: 52,
-    backgroundColor: "#0B1015",
+    backgroundColor: Theme.bgInput,
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: Theme.border,

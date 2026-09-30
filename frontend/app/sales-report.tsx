@@ -2660,7 +2660,7 @@ export default function SalesReport() {
           "Discount Sales",
           formatCurrency(filteredMetrics.TotalDiscount),
           "pricetag-outline",
-          "#f97316",
+          "#3B82F6",
         )}
         {renderMetricTile(
           "Credit Collections",

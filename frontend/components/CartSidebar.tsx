@@ -65,9 +65,9 @@ const isPhoneDevice = Math.min(Dimensions.get("window").width, Dimensions.get("w
 const styles = StyleSheet.create({
   container: {
     height: "100%",
-    backgroundColor: "#11171D",
+    backgroundColor: Theme.bgCard,
     borderLeftWidth: 1.5,
-    borderLeftColor: "#303840",
+    borderLeftColor: Theme.border,
     padding: isPhoneDevice ? 10 : 16,
     shadowColor: "#000",
     shadowOffset: { width: -8, height: 0 },
@@ -103,14 +103,14 @@ const styles = StyleSheet.create({
   emptyCartTitle: {
     fontFamily: Fonts.extraBold,
     fontSize: 22,
-    color: "#FFFFFF",
+    color: Theme.textPrimary,
     marginBottom: 12,
     textAlign: "center",
   },
   emptyCartSubtitle: {
     fontFamily: Fonts.medium,
     fontSize: 14,
-    color: "#8995A3",
+    color: Theme.textSecondary,
     textAlign: "center",
     lineHeight: 20,
   },
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   tableIdentityText: {
     fontSize: 16,
     fontFamily: Fonts.extraBold,
-    color: "#FFFFFF",
+    color: Theme.textPrimary,
     textTransform: "uppercase",
   },
   headerIcons: { flexDirection: "row", gap: 8 },
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: "#171D23",
+    backgroundColor: Theme.bgMuted,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -144,19 +144,19 @@ const styles = StyleSheet.create({
   itemContainer: {
     marginBottom: 5,
     borderWidth: 1,
-    borderColor: "#303840" + "80",
+    borderColor: Theme.border + "80",
     borderRadius: 6,
-    backgroundColor: "#151B21",
+    backgroundColor: Theme.bgMain,
     overflow: "hidden",
     flexDirection: "row",
     ...Theme.shadowSm,
     borderBottomWidth: 1,
-    borderBottomColor: "#303840" + "40",
+    borderBottomColor: Theme.border + "40",
   },
   itemExpanded: {
-    backgroundColor: "#171D23" + "50",
+    backgroundColor: Theme.bgMuted + "50",
     borderWidth: 1,
-    borderColor: "#303840",
+    borderColor: Theme.border,
   },
   statusBar: { width: 4, height: "100%" },
   itemHeader: {
@@ -178,14 +178,14 @@ const styles = StyleSheet.create({
   itemIndex: {
     fontSize: 13,
     fontFamily: Fonts.black,
-    color: "#FFFFFF",
+    color: Theme.textPrimary,
   },
   itemInfo: { flex: 1, paddingRight: 4 },
   itemMainRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   itemName: {
     fontSize: 13,
     fontFamily: Fonts.bold,
-    color: "#FFFFFF",
+    color: Theme.textPrimary,
     flex: 1,
   },
   statusTag: {
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   modifierTextSmall: {
     fontSize: 10,
     fontFamily: Fonts.medium,
-    color: "#AAB4C0",
+    color: Theme.textMuted,
     lineHeight: 14,
   },
   inlineControls: {
@@ -215,12 +215,12 @@ const styles = StyleSheet.create({
   sentQtyText: {
     fontSize: 12,
     fontFamily: Fonts.black,
-    color: "#AAB4C0",
+    color: Theme.textMuted,
   },
   qtyControlSmall: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#111010ff",
+    backgroundColor: Theme.bgInput,
     borderRadius: 8,
     padding: 2,
   },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#151B21",
+    backgroundColor: Theme.bgMain,
     borderRadius: 6,
     ...Theme.shadowSm,
   },
@@ -237,23 +237,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 13,
     fontFamily: Fonts.extraBold,
-    color: "#FFFFFF",
+    color: Theme.textPrimary,
   },
   priceContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
   itemPrice: {
     fontSize: 14,
     fontFamily: Fonts.extraBold,
-    color: "#ffffffff",
+    color: Theme.textPrimary,
     minWidth: 60,
     textAlign: "right",
   },
   deleteBtn: { padding: 4, marginLeft: 4 },
-  textMuted: { color: "#8995A3" },
+  textMuted: { color: Theme.textSecondary },
   discountRow: {
     padding: 10,
-    backgroundColor: "#151B21" + "30",
+    backgroundColor: Theme.bgMain + "30",
     borderTopWidth: 1,
-    borderTopColor: "#303840" + "50",
+    borderTopColor: Theme.border + "50",
   },
   discountInputWrap: {
     flexDirection: "row",
@@ -263,21 +263,21 @@ const styles = StyleSheet.create({
   discountLabel: {
     fontSize: 11,
     fontFamily: Fonts.bold,
-    color: "#8995A3",
+    color: Theme.textSecondary,
   },
   discountInputSmall: {
     width: 60,
     height: 32,
-    backgroundColor: "#151B21",
+    backgroundColor: Theme.bgMain,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#303840",
+    borderColor: Theme.border,
     textAlign: "center",
     fontSize: 12,
     fontFamily: Fonts.black,
     ...Platform.select({ web: { outlineStyle: "none" } as any }),
   },
-  footer: { borderTopWidth: 1, borderTopColor: "#303840", paddingTop: 16 },
+  footer: { borderTopWidth: 1, borderTopColor: Theme.border, paddingTop: 16 },
   addBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -303,28 +303,28 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 13,
     fontFamily: Fonts.medium,
-    color: "#AAB4C0",
+    color: Theme.textMuted,
   },
   summaryValue: {
     fontSize: 14,
     fontFamily: Fonts.black,
-    color: "#FFFFFF",
+    color: Theme.textPrimary,
   },
   summaryDivider: {
     height: 1,
-    backgroundColor: "#303840",
+    backgroundColor: Theme.border,
     marginVertical: 10,
     opacity: 0.5,
   },
   payableLabel: {
     fontSize: 15,
     fontFamily: Fonts.black,
-    color: "#FFFFFF",
+    color: Theme.textPrimary,
   },
   payableValue: {
     fontSize: 20,
     fontFamily: Fonts.black,
-    color: "#FFFFFF",
+    color: Theme.textPrimary,
   },
   actions: { flexDirection: "row", gap: isPhoneDevice ? 6 : 10 },
   holdBtn: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     ...Theme.shadowMd,
   },
-  btnText: { color: "#FFFFFF", fontFamily: Fonts.black, fontSize: isPhoneDevice ? 13 : 15, textAlign: "center" },
+  btnText: { color: "#FFFFFF", fontFamily: Fonts.black, fontSize: isPhoneDevice ? 13 : 14, textAlign: "center", flexShrink: 1 },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#11171D",
+    backgroundColor: Theme.bgCard,
     padding: 24,
     borderRadius: 20,
     width: 300,
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontFamily: Fonts.black, marginBottom: 15 },
   modalInput: {
     borderWidth: 1,
-    borderColor: "#303840",
+    borderColor: Theme.border,
     borderRadius: 10,
     padding: 12,
     marginBottom: 20,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   },
   modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 10 },
   modalBtnCancel: { padding: 10 },
-  modalBtnTextCancel: { color: "#AAB4C0", fontFamily: Fonts.bold },
+  modalBtnTextCancel: { color: Theme.textMuted, fontFamily: Fonts.bold },
   modalBtnConfirm: {
     backgroundColor: Theme.danger,
     paddingHorizontal: 20,
@@ -441,13 +441,13 @@ const styles = StyleSheet.create({
   },
   orderIdLabel: {
     fontSize: 10,
-    color: "#AAB4C0",
+    color: Theme.textMuted,
     fontFamily: Fonts.bold,
     marginTop: 2,
     opacity: 0.8,
   },
   sentLabel: {
-    backgroundColor: "#171D23",
+    backgroundColor: Theme.bgMuted,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -2454,6 +2454,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                           name="pause-circle-outline"
                           size={iconSize}
                           color="#FFFFFF"
+                          style={{ flexShrink: 0 }}
                         />
                         {!isPhone && <Text style={styles.btnText}>Hold Cart</Text>}
                       </TouchableOpacity>
@@ -2553,17 +2554,18 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                             <Ionicons
                               name={
                                 (enableCheckoutFlow === true && enableDirectProcessToPay === false)
-                                  ? "send"
+                                  ? "paper-plane"
                                   : (enableCheckoutFlow === false && enableDirectProcessToPay === true)
                                     ? "card-outline"
                                     : "receipt-outline"
                               }
                               size={iconSize}
                               color="#FFFFFF"
+                              style={{ flexShrink: 0, marginLeft: 2 }}
                             />
                             <Text style={styles.btnText}>
                               {(enableCheckoutFlow === true && enableDirectProcessToPay === false)
-                                ? (isPhone ? "Send" : (!isLandscape ? "Send Kitchen" : "Send to Kitchen"))
+                                ? "Send"
                                 : (enableCheckoutFlow === false && enableDirectProcessToPay === true)
                                   ? (!isPhone ? "Process to Pay" : "Pay")
                                   : "Checkout"}

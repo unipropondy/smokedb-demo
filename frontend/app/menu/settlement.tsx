@@ -371,7 +371,7 @@ const pickerStyles = StyleSheet.create({
     borderRadius: 8,
   },
   dayBtnSelected: {
-    backgroundColor: Theme.primary, // Brand theme
+    backgroundColor: '#f97316', // Orange theme
   },
   dayText: {
     fontSize: 13,

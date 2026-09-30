@@ -558,7 +558,7 @@ const TableItemComponent = React.memo(
         case 2: ss = { cardBg: ["#FFFBEB", "#FEF3C7"], badge: "#F97316", badgeBg: "#FFF7ED", badgeBorder: "#FED7AA", carColor: "#F97316", textColor: "#B45309", label: "Waiting" }; break;
         case 4: ss = { cardBg: ["#F0FDF4", "#DCFCE7"], badge: "#22C55E", badgeBg: "#F0FDF4", badgeBorder: "#86EFAC", carColor: "#16A34A", textColor: "#15803D", label: "Completed" }; break;
         case 5: ss = { cardBg: ["#F5F3FF", "#EDE9FE"], badge: "#8B5CF6", badgeBg: "#F5F3FF", badgeBorder: "#C4B5FD", carColor: "#8B5CF6", textColor: "#7C3AED", label: "Reserved" }; break;
-        default: ss = { cardBg: ["#c7c7c7ba", "#F8FAFC"], badge: "#010101ff", badgeBg: "#F8FAFC", badgeBorder: "#E2E8F0", carColor: "#000000a1", textColor: "#64748B", label: "Available" };
+        default: ss = { cardBg: ["#FFFFFF", "#F3F4F6"], badge: "#4B5563", badgeBg: "#F9FAFB", badgeBorder: "#E5E7EB", carColor: "#9CA3AF", textColor: "#4B5563", label: "Available" };
       }
     }
 
@@ -595,7 +595,7 @@ const TableItemComponent = React.memo(
             padding: 8, // Reduced padding to fit text
             minHeight: isAbsoluteLayout ? undefined : cardH,
             borderWidth: 1,
-            borderColor: isOccupied ? ss.badgeBorder : "#E5E7EB",
+            borderColor: isOccupied ? ss.badgeBorder : "#6B7280",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.08,
@@ -603,34 +603,34 @@ const TableItemComponent = React.memo(
             elevation: isOccupied ? 3 : 1,
           }}
         >
-          {/* ── Row 1: Bay label + status badge + 3-dot ── */}
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1 }}>
-              <Text
-                style={{ fontFamily: Fonts.bold, fontSize: 13, color: "#1E293B", flexShrink: 1 }}
-                numberOfLines={1}
-              >
-                Bay {item.label}
-              </Text>
-
-              {/* Status badge */}
-              <View style={{
-                flexDirection: "row", alignItems: "center", gap: 2,
-                backgroundColor: ss.badgeBg, borderRadius: 20, borderWidth: 1,
-                borderColor: ss.badgeBorder, paddingHorizontal: 6, paddingVertical: 2,
-              }}>
-                {effectiveStatus === 1 && <Ionicons name="water" size={10} color={ss.badge} />}
-                {effectiveStatus === 2 && <Ionicons name="time" size={10} color={ss.badge} />}
-                {effectiveStatus === 4 && <Ionicons name="checkmark-circle" size={10} color={ss.badge} />}
-                {effectiveStatus === 5 && <Ionicons name="calendar" size={10} color={ss.badge} />}
-                <Text style={{ fontFamily: Fonts.semiBold, fontSize: 10, color: ss.badge }}>{ss.label}</Text>
-              </View>
-            </View>
+          {/* ── Row 1: Bay label + 3-dot ── */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+            <Text
+              style={{ fontFamily: Fonts.bold, fontSize: 13, color: "#1E293B", flexShrink: 1 }}
+              numberOfLines={1}
+            >
+              Bay {item.label}
+            </Text>
 
             {/* Three-dot menu */}
             <TouchableOpacity onPress={(e) => { e.stopPropagation(); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Ionicons name="ellipsis-vertical" size={16} color="#94A3B8" />
             </TouchableOpacity>
+          </View>
+
+          {/* ── Row 2: Status badge centered ── */}
+          <View style={{ alignItems: "center", marginBottom: 6 }}>
+            <View style={{
+              flexDirection: "row", alignItems: "center", gap: 2,
+              backgroundColor: ss.badgeBg, borderRadius: 20, borderWidth: 1,
+              borderColor: ss.badgeBorder, paddingHorizontal: 8, paddingVertical: 3,
+            }}>
+              {effectiveStatus === 1 && <Ionicons name="water" size={10} color={ss.badge} />}
+              {effectiveStatus === 2 && <Ionicons name="time" size={10} color={ss.badge} />}
+              {effectiveStatus === 4 && <Ionicons name="checkmark-circle" size={10} color={ss.badge} />}
+              {effectiveStatus === 5 && <Ionicons name="calendar" size={10} color={ss.badge} />}
+              <Text style={{ fontFamily: Fonts.semiBold, fontSize: 10, color: ss.badge }}>{ss.label}</Text>
+            </View>
           </View>
 
           {/* ── Row 2: Car icon ── */}
@@ -3599,7 +3599,7 @@ export default function Category() {
             {/* User Info Header */}
             {user && (
               <LinearGradient
-                colors={[Theme.primary, "#E05A10"]}
+                colors={[Theme.primary, Theme.primaryDark]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.menuUserSectionGradient}
@@ -3636,7 +3636,7 @@ export default function Category() {
                 style={[
                   styles.menuItem,
                   isTablesExpanded && {
-                    backgroundColor: "#F3F4F6",
+                    backgroundColor: Theme.bgMuted,
                     borderBottomLeftRadius: 0,
                     borderBottomRightRadius: 0,
                     borderBottomWidth: 0,
@@ -3781,7 +3781,7 @@ export default function Category() {
                 style={[
                   styles.menuItem,
                   isStaffExpanded && {
-                    backgroundColor: "#F3F4F6",
+                    backgroundColor: Theme.bgMuted,
                     borderBottomLeftRadius: 0,
                     borderBottomRightRadius: 0,
                     borderBottomWidth: 0,
@@ -4037,7 +4037,7 @@ export default function Category() {
                     style={[
                       styles.menuItem,
                       isReportsExpanded && {
-                        backgroundColor: "#F3F4F6",
+                        backgroundColor: Theme.bgMuted,
                         borderBottomLeftRadius: 0,
                         borderBottomRightRadius: 0,
                         borderBottomWidth: 0,
@@ -4304,10 +4304,10 @@ export default function Category() {
                     <View
                       style={[
                         styles.menuIconContainer,
-                        { backgroundColor: "#f97316" + "15" },
+                        { backgroundColor: "#3B82F6" + "15" },
                       ]}
                     >
-                      <Ionicons name="qr-code-outline" size={18} color="#f97316" />
+                      <Ionicons name="qr-code-outline" size={18} color="#3B82F6" />
                     </View>
                     <Text style={styles.subMenuItemText}>Table QR Codes</Text>
                   </TouchableOpacity>
@@ -4421,45 +4421,41 @@ export default function Category() {
 
       {/* â•â•â•â•â•â•â•â•â•â•â• TABLE GRID â•â•â•â•â•â•â•â•â•â•â• */}
       {/* CAR WASH BAY GRID */}
-      <ImageBackground
-        source={require('../../assets/images/car_wash1.png')}
-        style={{ flex: 1, width: '100%', height: '100%' }}
-        resizeMode="cover"
-      >
-        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+      <View style={{ flex: 1, backgroundColor: Theme.bgMain }}>
+        <View style={{ flex: 1 }}>
 
           {/* Stats + Legend Bar */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', flexWrap: 'wrap', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: Theme.bgCard, borderBottomWidth: 1, borderBottomColor: Theme.border, flexWrap: 'wrap', gap: 8 }}>
             {/* Total Bays */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 16, borderRightWidth: 1, borderRightColor: '#E5E7EB' }}>
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="car" size={18} color="#3B82F6" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 16, borderRightWidth: 1, borderRightColor: Theme.border }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: Theme.primary + '15', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="car" size={18} color={Theme.primary} />
               </View>
               <View>
-                <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: '#64748B' }}>Total Bays</Text>
-                <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: '#1E293B', marginTop: -2 }}>{currentTables.length}</Text>
+                <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: Theme.textSecondary }}>Total Bays</Text>
+                <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: Theme.textPrimary, marginTop: -2 }}>{currentTables.length}</Text>
               </View>
             </View>
             {/* Occupied */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, borderRightWidth: 1, borderRightColor: '#E5E7EB' }}>
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#DBEAFE', justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="car-sport" size={18} color="#3B82F6" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, borderRightWidth: 1, borderRightColor: Theme.border }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: Theme.primary + '15', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="car-sport" size={18} color={Theme.primary} />
               </View>
               <View>
-                <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: '#64748B' }}>Occupied</Text>
-                <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: '#1E293B', marginTop: -2 }}>
+                <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: Theme.textSecondary }}>Occupied</Text>
+                <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: Theme.textPrimary, marginTop: -2 }}>
                   {currentTables.filter(t => { const s = tableMap[t.id]?.status; return s === 'SENT' || s === 'BILL_REQUESTED' || s === 'HOLD' || s === 'LOCKED'; }).length}
                 </Text>
               </View>
             </View>
             {/* Available */}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16 }}>
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="car" size={18} color="#94A3B8" />
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: Theme.bgMuted, justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="car" size={18} color={Theme.textSecondary} />
               </View>
               <View>
-                <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: '#64748B' }}>Available</Text>
-                <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: '#1E293B', marginTop: -2 }}>
+                <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: Theme.textSecondary }}>Available</Text>
+                <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: Theme.textPrimary, marginTop: -2 }}>
                   {currentTables.filter(t => { const s = tableMap[t.id]?.status; return !s || s === 'EMPTY'; }).length || currentTables.filter(t => Number(t.Status) === 0).length}
                 </Text>
               </View>
@@ -4468,14 +4464,14 @@ export default function Category() {
             {/* Legend */}
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
               {[
-                { color: '#3B82F6', label: 'Washing' },
-                { color: '#F97316', label: 'Waiting' },
-                { color: '#22C55E', label: 'Completed' },
-                { color: '#94A3B8', label: 'Available' },
+                { color: Theme.info, label: 'Washing' },
+                { color: Theme.tableSentOld.border, label: 'Waiting' },
+                { color: Theme.success, label: 'Completed' },
+                { color: Theme.textMuted, label: 'Available' },
               ].map(({ color, label }) => (
                 <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
-                  <Text style={{ fontFamily: Fonts.medium, fontSize: 11, color: '#64748B' }}>{label}</Text>
+                  <Text style={{ fontFamily: Fonts.medium, fontSize: 11, color: Theme.textSecondary }}>{label}</Text>
                 </View>
               ))}
             </View>
@@ -4551,7 +4547,7 @@ export default function Category() {
 
 
         </View>
-      </ImageBackground>
+      </View>
 
       {/* 〰〰〰〰〰〰〰〰〰〰〰 CUSTOMER GUEST & PAX MODAL 〰〰〰〰〰〰〰〰〰〰〰 */}
       <Modal
@@ -5591,7 +5587,7 @@ export default function Category() {
       {/* General Settings Modal */}
 
       {/* Floating AI Chat Assistant Button */}
-      {user?.role === "ADMIN" && (
+      {false && user?.role === "ADMIN" && (
         <TouchableOpacity
           style={[
             styles.floatingAiBtn,
@@ -6000,7 +5996,7 @@ const styles = StyleSheet.create({
   },
   menuContent: {
     width: 260,
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.bgCard,
     borderRadius: 20,
     padding: 10,
     ...Theme.shadowLg,
@@ -6031,7 +6027,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.bgCard,
     borderWidth: 2.5,
     borderColor: "rgba(255, 255, 255, 0.5)",
     justifyContent: "center",

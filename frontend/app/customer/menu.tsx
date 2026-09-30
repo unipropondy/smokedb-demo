@@ -1028,7 +1028,7 @@ export default function CustomerMenuScreen() {
               {/* Profile Avatar Header */}
               <View style={{ alignItems: "center", marginBottom: 20 }}>
                 <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "#FFF2EC", justifyContent: "center", alignItems: "center", marginBottom: 10 }}>
-                  <Ionicons name="person" size={30} color="#FF5E1A" />
+                  <Ionicons name="person" size={30} color="#3B82F6" />
                 </View>
                 <Text style={{ fontSize: 18, fontWeight: "800", color: "#0F172A" }}>
                   {userInfo?.FullName || userInfo?.UserName || "Guest Customer"}
@@ -1041,7 +1041,7 @@ export default function CustomerMenuScreen() {
               {/* Account Details List */}
               <View style={{ gap: 14, marginBottom: 20, backgroundColor: "#F8FAFC", padding: 14, borderRadius: 18, borderWidth: 1, borderColor: "#E2E8F0" }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Ionicons name="call" size={18} color="#FF5E1A" style={{ width: 20 }} />
+                  <Ionicons name="call" size={18} color="#3B82F6" style={{ width: 20 }} />
                   <View>
                     <Text style={{ fontSize: 11, color: "#94A3B8", fontWeight: "700", textTransform: "uppercase" }}>Phone Number</Text>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: "#334155" }}>
@@ -1051,7 +1051,7 @@ export default function CustomerMenuScreen() {
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Ionicons name="mail" size={18} color="#FF5E1A" style={{ width: 20 }} />
+                  <Ionicons name="mail" size={18} color="#3B82F6" style={{ width: 20 }} />
                   <View>
                     <Text style={{ fontSize: 11, color: "#94A3B8", fontWeight: "700", textTransform: "uppercase" }}>Email Address</Text>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: "#334155" }}>
@@ -1061,7 +1061,7 @@ export default function CustomerMenuScreen() {
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Ionicons name="gift" size={18} color="#FF5E1A" style={{ width: 20 }} />
+                  <Ionicons name="gift" size={18} color="#3B82F6" style={{ width: 20 }} />
                   <View>
                     <Text style={{ fontSize: 11, color: "#94A3B8", fontWeight: "700", textTransform: "uppercase" }}>Promo Balance</Text>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: "#10B981" }}>
@@ -1071,7 +1071,7 @@ export default function CustomerMenuScreen() {
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Ionicons name="time" size={18} color="#FF5E1A" style={{ width: 20 }} />
+                  <Ionicons name="time" size={18} color="#3B82F6" style={{ width: 20 }} />
                   <View>
                     <Text style={{ fontSize: 11, color: "#94A3B8", fontWeight: "700", textTransform: "uppercase" }}>Session Started</Text>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: "#334155" }}>
@@ -1081,7 +1081,7 @@ export default function CustomerMenuScreen() {
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Ionicons name="location" size={18} color="#FF5E1A" style={{ width: 20 }} />
+                  <Ionicons name="location" size={18} color="#3B82F6" style={{ width: 20 }} />
                   <View>
                     <Text style={{ fontSize: 11, color: "#94A3B8", fontWeight: "700", textTransform: "uppercase" }}>Dining Location</Text>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: "#334155" }}>
@@ -1105,16 +1105,16 @@ export default function CustomerMenuScreen() {
                     paddingVertical: 12,
                     borderRadius: 14,
                     borderWidth: 1.5,
-                    borderColor: showOrderHistorySection ? "#FF5E1A" : "#E2E8F0",
+                    borderColor: showOrderHistorySection ? "#3B82F6" : "#E2E8F0",
                   }}
                 >
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                    <Ionicons name="time" size={18} color="#FF5E1A" />
+                    <Ionicons name="time" size={18} color="#3B82F6" />
                     <Text style={{ fontSize: 13, fontWeight: "800", color: "#0F172A", textTransform: "uppercase" }}>
                       Order History
                     </Text>
                   </View>
-                  <Ionicons name={showOrderHistorySection ? "chevron-up" : "chevron-down"} size={20} color="#FF5E1A" />
+                  <Ionicons name={showOrderHistorySection ? "chevron-up" : "chevron-down"} size={20} color="#3B82F6" />
                 </TouchableOpacity>
 
                 {showOrderHistorySection && (
@@ -1124,7 +1124,7 @@ export default function CustomerMenuScreen() {
                         Please register or log in with your phone number to view order history.
                       </Text>
                     ) : ordersLoading ? (
-                      <ActivityIndicator size="small" color="#FF5E1A" style={{ marginVertical: 10 }} />
+                      <ActivityIndicator size="small" color="#3B82F6" style={{ marginVertical: 10 }} />
                     ) : customerOrders.length > 0 ? (
                       customerOrders.map((order, idx) => {
                         const dateText = order.OrderDateTime 
@@ -1154,7 +1154,7 @@ export default function CustomerMenuScreen() {
                               <Text style={{ fontSize: 11, color: "#64748B", fontWeight: "600", marginTop: 2 }}>
                                 {dateText} {timeText ? `• ${timeText}` : ""}
                               </Text>
-                              <Text style={{ fontSize: 11, color: "#FF5E1A", fontWeight: "700", marginTop: 2 }}>
+                              <Text style={{ fontSize: 11, color: "#3B82F6", fontWeight: "700", marginTop: 2 }}>
                                 {order.PayMode || "Paid"}
                               </Text>
                             </View>
@@ -1188,22 +1188,22 @@ export default function CustomerMenuScreen() {
                       paddingVertical: 12,
                       borderRadius: 14,
                       borderWidth: 1.5,
-                      borderColor: showLoyaltySection ? "#FF5E1A" : "#E2E8F0",
+                      borderColor: showLoyaltySection ? "#3B82F6" : "#E2E8F0",
                     }}
                   >
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                      <Ionicons name="ribbon" size={18} color="#FF5E1A" />
+                      <Ionicons name="ribbon" size={18} color="#3B82F6" />
                       <Text style={{ fontSize: 13, fontWeight: "800", color: "#0F172A", textTransform: "uppercase" }}>
                         Loyalty & Rewards
                       </Text>
                     </View>
-                    <Ionicons name={showLoyaltySection ? "chevron-up" : "chevron-down"} size={20} color="#FF5E1A" />
+                    <Ionicons name={showLoyaltySection ? "chevron-up" : "chevron-down"} size={20} color="#3B82F6" />
                   </TouchableOpacity>
 
                   {showLoyaltySection && (
                     <View style={{ marginTop: 10, gap: 12 }}>
                       {/* Loyalty Visit Stats Card */}
-                      <View style={{ backgroundColor: "#FF5E1A", borderRadius: 16, padding: 14, shadowColor: "#FF5E1A", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 6 }}>
+                      <View style={{ backgroundColor: "#3B82F6", borderRadius: 16, padding: 14, shadowColor: "#3B82F6", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 6 }}>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                             <Ionicons name="sparkles" size={18} color="#FFFFFF" />
@@ -1256,13 +1256,13 @@ export default function CustomerMenuScreen() {
                                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}>
                                   <Ionicons name="cart-outline" size={14} color="#334155" />
                                   <Text style={{ fontSize: 12, fontWeight: "700", color: "#334155" }}>
-                                    Buy: <Text style={{ color: "#FF5E1A", fontWeight: "800" }}>{prog.PurchaseDishName || "Eligible Dish"}</Text>
+                                    Buy: <Text style={{ color: "#3B82F6", fontWeight: "800" }}>{prog.PurchaseDishName || "Eligible Dish"}</Text>
                                   </Text>
                                 </View>
 
                                 {/* Progress bar */}
                                 <View style={{ height: 8, backgroundColor: "#E2E8F0", borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
-                                  <View style={{ height: "100%", backgroundColor: "#FF5E1A", width: `${progressPercent}%`, borderRadius: 4 }} />
+                                  <View style={{ height: "100%", backgroundColor: "#3B82F6", width: `${progressPercent}%`, borderRadius: 4 }} />
                                 </View>
 
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -1286,7 +1286,7 @@ export default function CustomerMenuScreen() {
 
             {/* Modal Action Button */}
             <TouchableOpacity 
-              style={{ width: "100%", paddingVertical: 13, backgroundColor: "#FF5E1A", borderRadius: 14, alignItems: "center", marginTop: 14 }}
+              style={{ width: "100%", paddingVertical: 13, backgroundColor: "#3B82F6", borderRadius: 14, alignItems: "center", marginTop: 14 }}
               onPress={() => setShowProfileModal(false)}
             >
               <Text style={{ fontSize: 15, fontWeight: "800", color: "#fff" }}>Close</Text>

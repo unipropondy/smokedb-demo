@@ -2062,7 +2062,7 @@ export default function SummaryScreen() {
                     <View
                       style={{
                         backgroundColor: "#FFF7ED",
-                        borderColor: "#F97316",
+                        borderColor: "#3B82F6",
                         borderWidth: 1,
                         borderRadius: 10,
                         padding: 12,
@@ -2071,7 +2071,7 @@ export default function SummaryScreen() {
                       }}
                     >
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                        <Ionicons name="gift" size={16} color="#F97316" />
+                        <Ionicons name="gift" size={16} color="#3B82F6" />
                         <Text style={{ fontSize: 13, fontFamily: Fonts.black, color: Theme.textPrimary, flex: 1 }}>
                           Reward Member: {rewardMember.Name}
                         </Text>
@@ -2082,7 +2082,7 @@ export default function SummaryScreen() {
                           onPress={() => setShowRewardModal(true)}
                           style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: "#FFEDD5" }}
                         >
-                          <Text style={{ fontSize: 11, fontFamily: Fonts.bold, color: "#F97316" }}>Change</Text>
+                          <Text style={{ fontSize: 11, fontFamily: Fonts.bold, color: "#3B82F6" }}>Change</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={() => {

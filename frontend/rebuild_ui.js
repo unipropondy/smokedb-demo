@@ -74,7 +74,7 @@ const TableItemComponent = React.memo(
     } else {
       switch (effectiveStatus) {
         case 1: ss = { cardBg:["#EFF6FF","#DBEAFE"], badge:"#3B82F6", badgeBg:"#EFF6FF", badgeBorder:"#93C5FD", carColor:"#3B82F6", textColor:"#1D4ED8", label:"Washing" }; break;
-        case 2: ss = { cardBg:["#FFFBEB","#FEF3C7"], badge:"#F97316", badgeBg:"#FFF7ED", badgeBorder:"#FED7AA", carColor:"#F97316", textColor:"#B45309", label:"Waiting" }; break;
+        case 2: ss = { cardBg:["#FFFBEB","#FEF3C7"], badge:"#3B82F6", badgeBg:"#FFF7ED", badgeBorder:"#FED7AA", carColor:"#3B82F6", textColor:"#B45309", label:"Waiting" }; break;
         case 4: ss = { cardBg:["#F0FDF4","#DCFCE7"], badge:"#22C55E", badgeBg:"#F0FDF4", badgeBorder:"#86EFAC", carColor:"#16A34A", textColor:"#15803D", label:"Completed" }; break;
         case 5: ss = { cardBg:["#F5F3FF","#EDE9FE"], badge:"#8B5CF6", badgeBg:"#F5F3FF", badgeBorder:"#C4B5FD", carColor:"#8B5CF6", textColor:"#7C3AED", label:"Reserved" }; break;
         default: ss = { cardBg:["#FFFFFF","#F8FAFC"], badge:"#94A3B8", badgeBg:"#F8FAFC", badgeBorder:"#E2E8F0", carColor:"#94A3B8", textColor:"#64748B", label:"Available" };
@@ -251,7 +251,7 @@ const newGrid = `{/* CAR WASH BAY GRID */}
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
             {[
               { color: '#3B82F6', label: 'Washing' },
-              { color: '#F97316', label: 'Waiting' },
+              { color: '#3B82F6', label: 'Waiting' },
               { color: '#22C55E', label: 'Completed' },
               { color: '#94A3B8', label: 'Available' },
             ].map(({ color, label }) => (

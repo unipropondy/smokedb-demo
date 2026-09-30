@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
   reportButtonText: {
     fontSize: 12,
     fontFamily: Fonts.bold,
-    color: "#F97316",
+    color: "#3B82F6",
   },
   scrollContent: {
     padding: 20,
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   stepDotActive: {
-    backgroundColor: "#F97316",
+    backgroundColor: "#3B82F6",
   },
   stepDotCurrent: {
     borderWidth: 3,
@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   stepLineActive: {
-    backgroundColor: "#F97316",
+    backgroundColor: "#3B82F6",
   },
   card: {
     backgroundColor: "#fff",
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   primaryButton: {
-    backgroundColor: "#F97316",
+    backgroundColor: "#3B82F6",
     paddingVertical: 14,
     borderRadius: 12,
     width: "100%",

@@ -939,8 +939,8 @@ private static escapeHtml(str: string): string {
             <!-- 🏆 Print Reward point transaction stats on PDF Invoice -->
             ${parseFloat(saleData.rewardPointsEarned) > 0 ? `
               <div class="payment-row" style="font-size: 10px; font-weight: 700; display: flex; justify-content: space-between; background: #FFF7ED; padding: 1.5mm; border-radius: 4px; margin-top: 1.5mm;">
-                <span style="color: #F97316;">POINTS EARNED:</span>
-                <span style="color: #F97316;">+$${parseFloat(saleData.rewardPointsEarned).toFixed(2)}</span>
+                <span style="color: #3B82F6;">POINTS EARNED:</span>
+                <span style="color: #3B82F6;">+$${parseFloat(saleData.rewardPointsEarned).toFixed(2)}</span>
               </div>
             ` : ''}
             ${parseFloat(saleData.memberRewardBalance) > 0 ? `

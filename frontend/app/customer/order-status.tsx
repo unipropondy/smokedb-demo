@@ -1281,8 +1281,8 @@ export default function CustomerOrderStatusScreen() {
                   </View>
                   {orderDiscountAmt > 0 && (
                     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 }}>
-                      <Text style={{ color: "#FF5E1A", fontSize: 13, fontWeight: "700" }}>Promo Discount ({appliedPromo?.code})</Text>
-                      <Text style={{ color: "#FF5E1A", fontSize: 13, fontWeight: "700" }}>-{currencySymbol}{orderDiscountAmt.toFixed(2)}</Text>
+                      <Text style={{ color: "#3B82F6", fontSize: 13, fontWeight: "700" }}>Promo Discount ({appliedPromo?.code})</Text>
+                      <Text style={{ color: "#3B82F6", fontSize: 13, fontWeight: "700" }}>-{currencySymbol}{orderDiscountAmt.toFixed(2)}</Text>
                     </View>
                   )}
                   {serviceChargeAmt > 0 && (

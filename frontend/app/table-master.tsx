@@ -462,7 +462,7 @@ const DraggableTable = ({
           borderRadius: 14,
           padding: 8,
           borderWidth: isSelected ? 2 : 1,
-          borderColor: isSelected ? "#FF5E1A" : "#E2E8F0",
+          borderColor: isSelected ? "#3B82F6" : "#6B7280",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: isSelected ? 0.2 : 0.08,
@@ -471,8 +471,8 @@ const DraggableTable = ({
         }}
       >
         {/* ── Row 1: Bay label + status badge + 3-dot ── */}
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1 }}>
+        <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
+          <View style={{ flexDirection: "column", alignItems: "center", gap: 6, flexShrink: 1 }}>
             <Text 
               style={{ fontFamily: Fonts.bold, fontSize: 13, color: "#1E293B", flexShrink: 1 }}
               numberOfLines={1}
@@ -990,7 +990,7 @@ export default function TableMasterScreen() {
             <View style={{ flex: 1 }}>
                 <View style={styles.workspaceHeader}>
                   <View style={{ flexDirection: "row", alignItems: "center", flex: 1, gap: 8 }}>
-                    <Ionicons name="cube-outline" size={18} color="#FF5E1A" />
+                    <Ionicons name="cube-outline" size={18} color="#3B82F6" />
                     <Text style={styles.workspaceTitle}>INTERACTIVE VISUAL CANVAS</Text>
                     <Text style={styles.workspaceInstruction}>Drag tables directly to change layout positions</Text>
                   </View>
@@ -1015,7 +1015,7 @@ export default function TableMasterScreen() {
                               borderRadius: 9,
                               backgroundColor: theme.color,
                               borderWidth: isThemeActive ? 2 : 0.5,
-                              borderColor: isThemeActive ? "#FF5E1A" : "#CBD5E1",
+                              borderColor: isThemeActive ? "#3B82F6" : "#CBD5E1",
                               justifyContent: "center",
                               alignItems: "center"
                             }}
@@ -1120,7 +1120,7 @@ export default function TableMasterScreen() {
               <ScrollView contentContainerStyle={styles.editorScroll} showsVerticalScrollIndicator={false}>
                 <View style={styles.editorCard}>
                   <View style={styles.editorHeadingRow}>
-                    <Ionicons name="options-outline" size={18} color="#FF5E1A" />
+                    <Ionicons name="options-outline" size={18} color="#3B82F6" />
                     <Text style={styles.editorHeader}>
                       Properties: Table {selectedTable.label}
                     </Text>
@@ -1222,7 +1222,7 @@ export default function TableMasterScreen() {
                     <TouchableOpacity
                       style={{
                         flex: 1,
-                        backgroundColor: "#FF5E1A",
+                        backgroundColor: "#3B82F6",
                         paddingVertical: 12,
                         borderRadius: 8,
                         justifyContent: "center",
@@ -1259,7 +1259,7 @@ export default function TableMasterScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons name="add-circle-outline" size={22} color="#FF5E1A" style={{ marginRight: 8 }} />
+                <Ionicons name="add-circle-outline" size={22} color="#3B82F6" style={{ marginRight: 8 }} />
                 <Text style={styles.modalTitle}>Add New Table</Text>
               </View>
               <TouchableOpacity onPress={() => setIsAddModalVisible(false)}>
@@ -1412,7 +1412,7 @@ export default function TableMasterScreen() {
               <Ionicons 
                 name={isConfirmAlertOnly ? (confirmTitle.toLowerCase().includes("success") ? "checkmark-circle" : "alert-circle") : "help-circle"} 
                 size={32} 
-                color={confirmTitle.toLowerCase().includes("success") ? "#137333" : "#FF5E1A"} 
+                color={confirmTitle.toLowerCase().includes("success") ? "#137333" : "#3B82F6"} 
               />
             </View>
 
@@ -1469,7 +1469,7 @@ export default function TableMasterScreen() {
                   flex: 1,
                   paddingVertical: 11,
                   borderRadius: 12,
-                  backgroundColor: confirmTitle.toLowerCase().includes("success") ? "#10B981" : "#FF5E1A",
+                  backgroundColor: confirmTitle.toLowerCase().includes("success") ? "#10B981" : "#3B82F6",
                   justifyContent: "center",
                   alignItems: "center",
                   ...Platform.select({
@@ -1550,13 +1550,13 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#FF5E1A",
+    backgroundColor: "#3B82F6",
     marginRight: 6,
   },
   layoutStatusText: {
     fontFamily: Fonts.medium,
     fontSize: 12,
-    color: "#FF5E1A",
+    color: "#3B82F6",
   },
   sectionTabsBar: {
     height: 48,
@@ -1580,7 +1580,7 @@ const styles = StyleSheet.create({
   },
   sectionTabTextActive: {
     fontFamily: Fonts.bold,
-    color: "#FF5E1A",
+    color: "#3B82F6",
   },
   sectionTabLine: {
     position: "absolute",
@@ -1588,7 +1588,7 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     height: 3,
-    backgroundColor: "#FF5E1A",
+    backgroundColor: "#3B82F6",
     borderTopLeftRadius: 3,
     borderTopRightRadius: 3,
   },
@@ -1634,7 +1634,7 @@ const styles = StyleSheet.create({
   statVal: {
     fontFamily: Fonts.bold,
     fontSize: 18,
-    color: "#FF5E1A",
+    color: "#3B82F6",
   },
   statLbl: {
     fontFamily: Fonts.medium,
@@ -1674,7 +1674,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: "#FF5E1A",
+    backgroundColor: "#3B82F6",
     justifyContent: "center",
     alignItems: "center",
     ...Platform.select({
@@ -1707,7 +1707,7 @@ const styles = StyleSheet.create({
   },
   tableListSelected: {
     backgroundColor: "#FFF4EC",
-    borderColor: "#FF5E1A",
+    borderColor: "#3B82F6",
   },
   tableListItemTextCol: {
     flex: 1,
@@ -1718,7 +1718,7 @@ const styles = StyleSheet.create({
     color: "#1C1C1E",
   },
   tableListTextSelected: {
-    color: "#FF5E1A",
+    color: "#3B82F6",
   },
   tableListItemSub: {
     fontFamily: Fonts.medium,
@@ -1755,7 +1755,7 @@ const styles = StyleSheet.create({
   },
   saveLayoutBtn: {
     flexDirection: "row",
-    backgroundColor: "#FF5E1A",
+    backgroundColor: "#3B82F6",
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",
@@ -1895,7 +1895,7 @@ const styles = StyleSheet.create({
   stepperValueText: {
     fontFamily: Fonts.black,
     fontSize: 16,
-    color: "#FF5E1A",
+    color: "#3B82F6",
   },
   shapesRow: {
     flexDirection: "row",
@@ -1916,8 +1916,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   shapeSelectActive: {
-    backgroundColor: "#FF5E1A",
-    borderColor: "#FF5E1A",
+    backgroundColor: "#3B82F6",
+    borderColor: "#3B82F6",
   },
   shapeSelectText: {
     fontFamily: Fonts.semiBold,
@@ -1976,7 +1976,7 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   saveConfigBtn: {
-    backgroundColor: "#FF5E1A",
+    backgroundColor: "#3B82F6",
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",
@@ -2063,8 +2063,8 @@ const styles = StyleSheet.create({
     borderColor: "#E8E0D5",
   },
   modalSecBtnActive: {
-    backgroundColor: "#FF5E1A",
-    borderColor: "#FF5E1A",
+    backgroundColor: "#3B82F6",
+    borderColor: "#3B82F6",
   },
   modalSecText: {
     fontFamily: Fonts.semiBold,
@@ -2083,7 +2083,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#FF5E1A",
+    backgroundColor: "#3B82F6",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -2115,11 +2115,11 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 22,
     borderRadius: 10,
-    backgroundColor: "#FF5E1A",
+    backgroundColor: "#3B82F6",
     alignItems: "center",
     minWidth: 130,
     ...Platform.select({
-      ios: { shadowColor: "#FF5E1A", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3 },
+      ios: { shadowColor: "#3B82F6", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3 },
       android: { elevation: 3 },
       web: { boxShadow: "0 2px 5px rgba(255,94,26,0.25)" } as any,
     }),

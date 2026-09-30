@@ -210,7 +210,7 @@ export default function CashDrawerReportScreen() {
       {/* Audit Logs Table */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#F97316" />
+          <ActivityIndicator size="large" color="#3B82F6" />
         </View>
       ) : (
         <FlatList
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     color: '#4B5563',
   },
   filterChipTextActive: {
-    color: '#F97316',
+    color: '#3B82F6',
   },
   loadingContainer: {
     flex: 1,
