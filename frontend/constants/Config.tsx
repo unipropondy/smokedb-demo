@@ -18,12 +18,11 @@ const getLocalBackendIP = (): string => {
 
 const localIP = getLocalBackendIP();
 
+const cleanEnvUrl = process.env.EXPO_PUBLIC_API_URL?.trim().replace(/^["']|["';]+$/g, "").replace(/\/+$/, "");
+
 export const API_URL = __DEV__
   ? `http://${localIP}:3000`
-  : (process.env.EXPO_PUBLIC_API_URL ??
-    (Platform.OS === "web" && typeof window !== "undefined"
-      ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ""}`
-      : "https://smokedb-demo-production.up.railway.app"));
+  : (cleanEnvUrl || "https://smokedb-demo-production.up.railway.app");
 
 if (__DEV__) {
   console.log(`🌐 [Config] API_URL: ${API_URL} | Platform: ${Platform.OS}`);
