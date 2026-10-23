@@ -33,7 +33,7 @@ const ROLE_CONFIG: Record<string, { color: string; icon: string; label: string }
   MANAGER: { color: "#7C3AED", icon: "briefcase", label: "Manager" },
   SUPERVISOR: { color: "#0891B2", icon: "eye", label: "Supervisor" },
   CASHIER: { color: Theme.primary, icon: "cash", label: "Cashier" },
-  KDS: { color: "#10B981", icon: "restaurant", label: "Kitchen" },
+  KDS: { color: "#10B981", icon: "car-sport", label: "Kitchen / Bays" },
 };
 
 export default function LoginScreen() {
@@ -205,17 +205,28 @@ export default function LoginScreen() {
       </LinearGradient>*/}
       {/* Car Wash Background */}
       <ImageBackground
-        source={require("../assets/images/car_wash.png")}
-        style={StyleSheet.absoluteFill}
+        source={require("../assets/images/car.jpg")}
+        style={[
+          StyleSheet.absoluteFill,
+          Platform.OS === "web"
+            ? ({
+                width: "100vw",
+                height: "100vh",
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+              } as any)
+            : { width: "100%", height: "100%" },
+        ]}
+        imageStyle={{
+          width: "100%",
+          height: "100%",
+          resizeMode: "cover",
+        }}
         resizeMode="cover"
-      >
-        <View
-          style={{
-            ...StyleSheet.absoluteFillObject,
-            backgroundColor: "rgba(5, 5, 5, 0.35)",
-          }}
-        />
-      </ImageBackground>
+      />
 
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
@@ -354,7 +365,13 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.primary },
+  container: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#0F172A",
+    overflow: "hidden",
+  },
   safeArea: { flex: 1 },
   keyboardView: { flex: 1 },
   scrollContent: { flexGrow: 1 },
@@ -372,16 +389,38 @@ const styles = StyleSheet.create({
     justifyContent: "center", alignItems: "center",
     marginBottom: 14, borderWidth: 2, borderColor: "rgba(255,255,255,0.3)",
   },
-  appName: { color: "#fff", fontSize: 28, fontFamily: Fonts.black, letterSpacing: -0.5 },
-  appTagline: { color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: Fonts.medium, marginTop: 4 },
+  appName: {
+    color: "#0F172A",
+    fontSize: 28,
+    fontFamily: Fonts.black,
+    letterSpacing: -0.5,
+    textShadowColor: "rgba(255, 255, 255, 0.8)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  appTagline: {
+    color: "#334155",
+    fontSize: 13,
+    fontFamily: Fonts.bold,
+    marginTop: 4,
+    textShadowColor: "rgba(255, 255, 255, 0.8)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
 
   card: {
     width: "100%",
-    backgroundColor: "rgba(20, 20, 20, 0.78)",
+    backgroundColor: "rgba(15, 23, 42, 0.40)",
     borderRadius: 28,
     padding: 28,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.25)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.28)",
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+      } as any,
+    }),
     ...Theme.shadowLg,
   },
   cardTitle: {
@@ -411,12 +450,18 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.30)",
+    borderWidth: 1.2,
+    borderColor: "rgba(255, 255, 255, 0.35)",
     paddingHorizontal: 14,
     height: 52,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+      } as any,
+    }),
   },
   inputIcon: { marginRight: 10 },
   input: { flex: 1, color: "#FFFFFF", fontSize: 16, marginBottom: 8, fontFamily: Fonts.medium, ...Platform.select({ web: { outlineStyle: "none" } as any }) },

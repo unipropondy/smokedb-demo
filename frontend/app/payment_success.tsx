@@ -52,6 +52,7 @@ export default function PaymentSuccess() {
   const paymentsRaw = String(params.payments ?? "[]");
   const serviceCharge = String(params.serviceCharge ?? "0");
   const takeawayCharge = String(params.takeawayCharge ?? "0");
+  const extraCharge = String(params.extraCharge ?? "0");
   const payments = React.useMemo(() => {
     try {
       return JSON.parse(paymentsRaw);
@@ -75,14 +76,14 @@ export default function PaymentSuccess() {
       })
     ).start();
 
-    // Floating food icons
+    // Floating icons
     const icons = [
-      "pizza-outline",
-      "cafe-outline",
-      "ice-cream-outline",
-      "restaurant-outline",
-      "beer-outline",
-      "fast-food-outline",
+      "car-sport-outline",
+      "car-outline",
+      "sparkles-outline",
+      "water-outline",
+      "shield-checkmark-outline",
+      "speedometer-outline",
     ];
 
     const interval = setInterval(() => {
@@ -283,6 +284,7 @@ export default function PaymentSuccess() {
         subTotal: computedSubTotal,
         serviceCharge: parseFloat(serviceCharge) || 0,
         takeawayCharge: parseFloat(takeawayCharge) || 0,
+        extraCharge: parseFloat(extraCharge) || 0,
         mobileNo: params.mobileNo || "",
         rewardPointsEarned: params.rewardPointsEarned || "0",
         memberRewardBalance: params.memberRewardBalance || "0",
@@ -362,12 +364,12 @@ export default function PaymentSuccess() {
       <StatusBar barStyle="dark-content" backgroundColor={Theme.bgMain} />
       
       <View style={styles.container}>
-        {/* Infinite Spinning Background Dishes/Plates */}
+        {/* Infinite Spinning Background Icons */}
         <Animated.View style={[styles.bgDishContainer, { transform: [{ rotate: spin }] }]}>
-          <Ionicons name="restaurant" size={320} color="rgba(255, 107, 0, 0.04)" />
+          <Ionicons name="car-sport" size={320} color="rgba(37, 99, 235, 0.04)" />
         </Animated.View>
         <Animated.View style={[styles.bgDishContainer2, { transform: [{ rotate: spin }] }]}>
-          <Ionicons name="pizza" size={240} color="rgba(22, 163, 74, 0.03)" />
+          <Ionicons name="sparkles" size={240} color="rgba(59, 130, 246, 0.03)" />
         </Animated.View>
 
         {/* Floating food particles */}
@@ -435,6 +437,13 @@ export default function PaymentSuccess() {
               </View>
               <Text style={styles.value}>{currencySymbol}{total}</Text>
             </View>
+
+            {parseFloat(extraCharge) > 0 && (
+              <View style={[styles.row, { backgroundColor: "#FFF7ED", borderRadius: 8, paddingVertical: 4, paddingHorizontal: 8 }]}>
+                <Text style={[styles.label, { color: "#f97316" }]}>Extra Charge</Text>
+                <Text style={[styles.value, { color: "#f97316" }]}>{currencySymbol}{parseFloat(extraCharge).toFixed(2)}</Text>
+              </View>
+            )}
 
             <View style={styles.row}>
               <Text style={styles.label}>Amount Paid</Text>

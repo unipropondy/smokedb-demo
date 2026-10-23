@@ -476,7 +476,7 @@ export default function ComboCustomizer({
             <View style={styles.headerTitleRow}>
               <View style={styles.iconCircle}>
                 <Ionicons
-                  name="fast-food-outline"
+                  name="car-sport"
                   size={18}
                   color={Theme.primary}
                 />

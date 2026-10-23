@@ -9,11 +9,12 @@ import * as IntentLauncher from "expo-intent-launcher";
 interface WindowControlsProps {
   buttonStyle?: any;
   iconSize?: number;
+  iconColor?: string;
   showText?: boolean;
   hideHome?: boolean;
 }
 
-export default function WindowControls({ buttonStyle, iconSize = 20, showText = false, hideHome = false }: WindowControlsProps) {
+export default function WindowControls({ buttonStyle, iconSize = 20, iconColor = "#374151", showText = false, hideHome = false }: WindowControlsProps) {
   const router = useRouter();
   const pathname = usePathname();
   const toast = useToast();
@@ -85,7 +86,7 @@ export default function WindowControls({ buttonStyle, iconSize = 20, showText = 
           onPress={handleHome}
           activeOpacity={0.7}
         >
-          <Ionicons name="home" size={iconSize} color="#FFFFFF" />
+          <Ionicons name="home-outline" size={iconSize} color={iconColor} />
           {showText && <Text style={styles.btnText}>Home</Text>}
         </TouchableOpacity>
       )}

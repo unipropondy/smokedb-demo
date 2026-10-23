@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -65,7 +65,7 @@ const isPhoneDevice = Math.min(Dimensions.get("window").width, Dimensions.get("w
 const styles = StyleSheet.create({
   container: {
     height: "100%",
-    backgroundColor: Theme.bgCard,
+    backgroundColor: Theme.bgMain,
     borderLeftWidth: 1.5,
     borderLeftColor: Theme.border,
     padding: isPhoneDevice ? 10 : 16,
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Theme.border + "80",
     borderRadius: 6,
-    backgroundColor: Theme.bgMain,
+    backgroundColor: Theme.bgCard,
     overflow: "hidden",
     flexDirection: "row",
     ...Theme.shadowSm,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Theme.bgMain,
+    backgroundColor: Theme.bgCard,
     borderRadius: 6,
     ...Theme.shadowSm,
   },
@@ -1646,15 +1646,16 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
       <View style={styles.emptyCartIconWrap}>
         <View style={styles.emptyCartIconPulse} />
         <View style={styles.emptyCartIconContainer}>
-          <Image
-            source={require("../assets/images/car_wash.png")}
-            style={{ width: 100, height: 100, resizeMode: "contain" }}
+          <Ionicons
+            name="car-sport"
+            size={72}
+            color={Theme.primary}
           />
         </View>
       </View>
       <Text style={styles.emptyCartTitle}>Empty Cart</Text>
       <Text style={styles.emptyCartSubtitle}>
-        Select delicious dishes from the menu to start this order.
+        Select services or packages from the menu to start this order.
       </Text>
     </View>
   );
@@ -2587,7 +2588,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                             styles.proceedBtn,
                             {
                               flex: 1,
-                              backgroundColor: isCheckingOut ? "#303840" : "#F59E0B",
+                              backgroundColor: isCheckingOut ? "#303840" : "#F43F5E",
                             },
                           ]}
                           onPress={() => handleCheckout()}
@@ -2610,7 +2611,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                             styles.proceedBtn,
                             {
                               flex: 1,
-                              backgroundColor: enableDirectPaymentToProcess ? "#FF6B00" : "#10B981",
+                              backgroundColor: enableDirectPaymentToProcess ? "#F43F5E" : "#10B981",
                             },
                             isCheckingOut && { opacity: 0.6 }
                           ]}
@@ -2659,7 +2660,7 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
                     <TouchableOpacity
                       style={[
                         styles.proceedBtn,
-                        { flex: 1, backgroundColor: "#FF6B00" },
+                        { flex: 1, backgroundColor: "#F43F5E" },
                       ]}
                       onPress={() => {
                         if (enableCheckoutFlow !== false) {

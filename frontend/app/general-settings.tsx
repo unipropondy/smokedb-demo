@@ -320,7 +320,7 @@ export default function GeneralSettingsScreen() {
     },
     {
       title: "Kitchen & Order Routing",
-      icon: "restaurant-outline",
+      icon: "car-sport-outline",
       items: [
         {
           title: "KOT (Kitchen Order Ticket)",

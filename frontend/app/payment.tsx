@@ -108,6 +108,7 @@ type PaymentMethod = {
   yeahPayEnabled?: boolean;
   deviceSn?: string | null;
   deviceSalt?: string | null;
+  extraCharges?: number;
 };
 
 const PAYMODE_ICON_MAP: Record<string, string> = {
@@ -603,6 +604,12 @@ export default function PaymentScreen() {
     null,
   );
   const [loadingDetail, setLoadingDetail] = useState(false);
+  // Extra Charge Notice modal state
+  const [showExtraChargeModal, setShowExtraChargeModal] = useState(false);
+  const [pendingPayMode, setPendingPayMode] = useState<PaymentMethod | null>(null);
+  // Live ExtraCharges map fetched directly from backend (keyed by UPPER payMode)
+  // This is a ref so it's always current without causing extra renders
+  const paymodeExtraChargesRef = React.useRef<Record<string, number>>({});
   const [isUPIVisible, setIsUPIVisible] = useState(false);
   const [isPayNowVisible, setIsPayNowVisible] = useState(false);
   const [roundOff, setRoundOff] = useState(0);
@@ -828,6 +835,40 @@ export default function PaymentScreen() {
     }
   }, [hasLoadedMethods, cachedMethods]);
 
+  // 💸 EXTRA CHARGES: Fetch directly from backend so the store-cache gap doesn't matter.
+  // The paymentSettingsStore package doesn't persist extraCharges, so we hit the API
+  // ourselves and patch the paymentMethods state right after they are loaded.
+  useEffect(() => {
+    const fetchExtraCharges = async () => {
+      try {
+        const token = useAuthStore.getState().token;
+        const res = await fetch(`${API_URL}/api/sales/payment-methods`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) return;
+        const data: any[] = await res.json();
+        // Build a lookup map: UPPER(payMode) -> extraCharges
+        const chargesMap: Record<string, number> = {};
+        data.forEach((d) => {
+          const key = String(d.payMode || '').trim().toUpperCase();
+          chargesMap[key] = parseFloat(d.extraCharges || 0) || 0;
+        });
+        paymodeExtraChargesRef.current = chargesMap;
+        // Patch the already-loaded paymentMethods with real extraCharges
+        setPaymentMethods((prev) =>
+          prev.map((pm) => ({
+            ...pm,
+            extraCharges: chargesMap[pm.payMode.trim().toUpperCase()] ?? 0,
+          }))
+        );
+        console.log('[Payment] ExtraCharges map loaded:', chargesMap);
+      } catch (e) {
+        if (__DEV__) console.warn('[Payment] Failed to fetch ExtraCharges:', e);
+      }
+    };
+    fetchExtraCharges();
+  }, []);
+
   // 💵 QUICK CASH REAL-TIME SYNC — updates instantly when any terminal changes amounts
   useEffect(() => {
     const unsubscribe = useQuickCashStore.getState().subscribeToSocket();
@@ -1032,7 +1073,9 @@ export default function PaymentScreen() {
       )
       : 0;
   const paidNum = isCashMethod(method) ? parseFloat(cashInput) || 0 : total;
-  const change = Math.max(0, paidNum - total);
+  const currentExtraCharge = Number(selectedDetail?.extraCharges || 0) || paymodeExtraChargesRef.current[method?.trim()?.toUpperCase()] || 0;
+  const totalWithExtra = total + currentExtraCharge;
+  const change = Math.max(0, paidNum - totalWithExtra);
 
   useEffect(() => {
     if (!isFocused) {
@@ -1134,6 +1177,7 @@ export default function PaymentScreen() {
         yeahPayEnabled: d.yeahPayEnabled,
         deviceSn: d.deviceSn || null,
         deviceSalt: d.deviceSalt || null,
+        extraCharges: parseFloat((d as any).extraCharges || 0) || 0,
       }));
 
       const seen = new Set<string>();
@@ -1214,19 +1258,8 @@ export default function PaymentScreen() {
     }
   };
 
-  const handleSelectMethod = (m: PaymentMethod) => {
-    // 🚫 Block switching payment method while a terminal payment is in flight
-    if (paymentStatus === "processing") {
-      Alert.alert(
-        "Payment In Progress",
-        "A payment is currently being processed on the terminal. Please wait for it to complete.",
-        [{ text: "OK" }]
-      );
-      return;
-    }
-
-    // 🧹 If a previous YeahPay result (success/failed/cancelled) is still showing,
-    // clear it so the new method starts with a clean slate.
+  const applyPayMode = (m: PaymentMethod) => {
+    // 🧹 Clear any previous terminal result so the new method starts fresh
     if (paymentStatus !== "idle") {
       setPaymentStatus("idle");
       setPaymentMessage("");
@@ -1243,7 +1276,8 @@ export default function PaymentScreen() {
       setRoundOff(0);
       setRoundType(null);
     } else {
-      setCashInput(total.toFixed(2));
+      const extra = Number(m.extraCharges || 0) || paymodeExtraChargesRef.current[m.payMode.trim().toUpperCase()] || 0;
+      setCashInput((total + extra).toFixed(2));
     }
     setSelectedDetail(m);
 
@@ -1252,6 +1286,32 @@ export default function PaymentScreen() {
     if (tableId) {
       useTableNavigationStore.getState().setSelectedMethod(tableId.toString(), m.payMode);
     }
+  };
+
+  const handleSelectMethod = (m: PaymentMethod) => {
+    // 🚫 Block switching payment method while a terminal payment is in flight
+    if (paymentStatus === "processing") {
+      Alert.alert(
+        "Payment In Progress",
+        "A payment is currently being processed on the terminal. Please wait for it to complete.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    // 💸 If this paymode carries an ExtraCharge, show confirmation modal first.
+    // paymodeExtraChargesRef is always the live DB value (fetched directly).
+    // m.extraCharges may be 0 if the state patch hasn't re-rendered yet, so use ref as fallback.
+    const refExtra = paymodeExtraChargesRef.current[m.payMode.trim().toUpperCase()] ?? 0;
+    const extra = Number(m.extraCharges || 0) || refExtra;
+    if (extra > 0) {
+      // Always inject the correct extraCharges into pendingPayMode for the modal
+      setPendingPayMode({ ...m, extraCharges: extra });
+      setShowExtraChargeModal(true);
+      return;
+    }
+
+    applyPayMode(m);
   };
 
   useEffect(() => {
@@ -1592,6 +1652,8 @@ export default function PaymentScreen() {
               items: "[]",
               roundOff: "0.00",
               serviceCharge: "0.00",
+              takeawayCharge: "0.00",
+              extraCharge: "0.00",
               isSplit: payments && payments.length > 0 ? "true" : "false",
               waiterName: user?.userName || "Cashier",
               isLedgerCollection: "true",
@@ -1633,7 +1695,7 @@ export default function PaymentScreen() {
       const focModeId = focMode ? focMode.position || 1 : 1;
 
       let finalPayments = null;
-      let finalTotalAmount = total;
+      let finalTotalAmount = totalWithExtra;
 
       if (payments && payments.length > 0) {
         finalPayments = payments.map(p => ({
@@ -1676,12 +1738,26 @@ export default function PaymentScreen() {
           finalPayments.push({
             payModeId,
             payMode: method,
-            amount: total,
+            amount: totalWithExtra,
             referenceNo: "",
             isTerminalAlreadyProcessed: _isYeahPayFinal,
           });
-          finalTotalAmount = total + totalFocAmount;
+          finalTotalAmount = totalWithExtra + totalFocAmount;
         }
+      }
+      let finalCarNumber = tableState?.carNumber || null;
+      let finalCustomerName = tableState?.customerName || loyaltyName || null;
+      if (context?.tableId) {
+        try {
+          if (!finalCarNumber) {
+            const storedCar = await AsyncStorage.getItem(`car_number_${context.tableId}`);
+            if (storedCar) finalCarNumber = storedCar;
+          }
+          if (!finalCustomerName) {
+            const storedCust = await AsyncStorage.getItem(`customer_name_${context.tableId}`);
+            if (storedCust) finalCustomerName = storedCust;
+          }
+        } catch (e) {}
       }
 
       const saleData = {
@@ -1737,7 +1813,8 @@ export default function PaymentScreen() {
         discountRemarks: effectiveFocAmount > 0 ? "FOC" : (discount?.label || null),
         orderDiscountAmount: effectiveFocAmount > 0 ? effectiveFocAmount : discountAmount,
         itemDiscountAmount: payItemDiscount,
-        customerName: loyaltyName || tableState?.customerName || null,
+        customerName: finalCustomerName,
+        carNumber: finalCarNumber,
         mobileNo: loyaltyPhone || null,
         pax: tableState?.pax || null,
         rewardMemberId: rewardMemberId || null,
@@ -1781,6 +1858,7 @@ export default function PaymentScreen() {
             roundOff: displayedRoundOff.toFixed(2),
             serviceCharge: displayedServiceCharge.toFixed(2),
             takeawayCharge: currentTakeawayCharge.toFixed(2),
+            extraCharge: currentExtraCharge.toFixed(2),
             isSplit: splitItems ? "true" : "false",
             waiterName: context?.serverName ?? "",
             rewardPointsEarned: String(result.rewardPointsEarned || 0),
@@ -1817,6 +1895,8 @@ export default function PaymentScreen() {
                   useTerminalPaymentStore.getState().clearSession(tblIdStr);
                   delete ongoingPayments[tblIdStr];
                   closeActiveOrder(orderIdSnapshot || "");
+                  AsyncStorage.removeItem(`car_number_${tblIdStr}`).catch(() => {});
+                  AsyncStorage.removeItem(`customer_name_${tblIdStr}`).catch(() => {});
                 }
 
                 useOrderContextStore.getState().clearOrderContext();
@@ -1841,6 +1921,8 @@ export default function PaymentScreen() {
                 useTerminalPaymentStore.getState().clearSession(tblIdStr);
                 delete ongoingPayments[tblIdStr];
                 closeActiveOrder(orderIdSnapshot || "");
+                AsyncStorage.removeItem(`car_number_${tblIdStr}`).catch(() => {});
+                AsyncStorage.removeItem(`customer_name_${tblIdStr}`).catch(() => {});
               }
 
               useOrderContextStore.getState().clearOrderContext();
@@ -3497,7 +3579,7 @@ export default function PaymentScreen() {
                           ]}
                         >
                           {currencySymbol}
-                          {total.toFixed(2)}
+                          {totalWithExtra.toFixed(2)}
                         </Text>
                       </View>
                       {isCashMethod(method) && (
@@ -3776,6 +3858,145 @@ export default function PaymentScreen() {
           }
         }}
       />
+
+      {/* ── EXTRA CHARGE NOTICE MODAL ─────────────────────────────────────── */}
+      <Modal
+        visible={showExtraChargeModal && pendingPayMode !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => { setShowExtraChargeModal(false); setPendingPayMode(null); }}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+        }}>
+          <View style={{
+            backgroundColor: '#fff',
+            borderRadius: 24,
+            padding: 28,
+            width: '100%',
+            maxWidth: 420,
+            alignItems: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.18,
+            shadowRadius: 24,
+            elevation: 16,
+          }}>
+            {/* Close X */}
+            <TouchableOpacity
+              onPress={() => { setShowExtraChargeModal(false); setPendingPayMode(null); }}
+              style={{
+                position: 'absolute', top: 16, right: 16,
+                width: 36, height: 36, borderRadius: 18,
+                backgroundColor: '#f1f5f9',
+                alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="close" size={20} color="#64748b" />
+            </TouchableOpacity>
+
+            {/* Icon */}
+            <View style={{
+              width: 64, height: 64, borderRadius: 32,
+              backgroundColor: '#fff7ed',
+              alignItems: 'center', justifyContent: 'center',
+              marginBottom: 16,
+            }}>
+              <Ionicons name="flash" size={32} color="#f97316" />
+            </View>
+
+            {/* Title */}
+            <Text style={{ fontSize: 22, fontFamily: Fonts.black, color: '#0f172a', marginBottom: 6 }}>
+              Extra Charge Notice
+            </Text>
+            <Text style={{ fontSize: 14, fontFamily: Fonts.regular, color: '#64748b', marginBottom: 20, textAlign: 'center' }}>
+              Choosing{' '}
+              <Text style={{ fontWeight: '700', color: '#0f172a' }}>
+                {pendingPayMode?.description?.toUpperCase() ?? pendingPayMode?.payMode?.toUpperCase()}
+              </Text>
+              {' '}incurs an extra fee
+            </Text>
+
+            {/* Breakdown card */}
+            <View style={{
+              width: '100%',
+              backgroundColor: '#f8fafc',
+              borderRadius: 16,
+              padding: 18,
+              borderWidth: 1,
+              borderColor: '#e2e8f0',
+              marginBottom: 24,
+              gap: 8,
+            }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 14, fontFamily: Fonts.regular, color: '#475569' }}>Order Subtotal:</Text>
+                <Text style={{ fontSize: 14, fontFamily: Fonts.bold, color: '#0f172a' }}>
+                  ${total.toFixed(2)}
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 14, fontFamily: Fonts.regular, color: '#f97316' }}>
+                  Extra Charge ({pendingPayMode?.description?.toUpperCase() ?? pendingPayMode?.payMode?.toUpperCase()}):
+                </Text>
+                <Text style={{ fontSize: 14, fontFamily: Fonts.bold, color: '#f97316' }}>
+                  +${Number(pendingPayMode?.extraCharges || 0).toFixed(2)}
+                </Text>
+              </View>
+              <View style={{ height: 1, backgroundColor: '#e2e8f0', marginVertical: 4 }} />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 16, fontFamily: Fonts.black, color: '#0f172a' }}>Total Payable:</Text>
+                <Text style={{ fontSize: 18, fontFamily: Fonts.black, color: '#16a34a' }}>
+                  ${(total + Number(pendingPayMode?.extraCharges || 0)).toFixed(2)}
+                </Text>
+              </View>
+            </View>
+
+            {/* Action buttons */}
+            <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+              <TouchableOpacity
+                onPress={() => { setShowExtraChargeModal(false); setPendingPayMode(null); }}
+                style={{
+                  flex: 1, paddingVertical: 14, borderRadius: 12,
+                  borderWidth: 1, borderColor: '#cbd5e1',
+                  backgroundColor: '#f8fafc',
+                  alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 15, fontFamily: Fonts.bold, color: '#475569' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  const pm = pendingPayMode;
+                  setShowExtraChargeModal(false);
+                  setPendingPayMode(null);
+                  if (pm) applyPayMode(pm);
+                }}
+                style={{
+                  flex: 1.5, paddingVertical: 14, borderRadius: 12,
+                  backgroundColor: '#16a34a',
+                  alignItems: 'center', justifyContent: 'center',
+                  shadowColor: '#16a34a',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 6,
+                }}
+              >
+                <Text style={{ fontSize: 15, fontFamily: Fonts.bold, color: '#fff' }}>
+                  Confirm &amp; Pay
+                </Text>
+                <Text style={{ fontSize: 12, fontFamily: Fonts.regular, color: 'rgba(255,255,255,0.85)' }}>
+                  (${(total + Number(pendingPayMode?.extraCharges || 0)).toFixed(2)})
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={showMemberModal}

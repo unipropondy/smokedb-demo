@@ -228,11 +228,71 @@ const ThemeSilverGray = {
   tableEmpty: { bg: '#FFFFFF', border: '#E5E7EB' },
 };
 
+const ThemeCrimsonCoral = {
+  ...ThemeBlue,
+  // ── Primary Brand (Light Red / Coral Rose from reference) ──
+  primary: '#F43F5E',       // Light Red / Rose
+  primaryDark: '#E11D48',   // Deeper Rose Red
+  primaryLight: '#FFE4E6',  // Soft blush rose tint
+  primaryBorder: 'rgba(244, 63, 94, 0.35)',
+
+  // ── Backgrounds (Warm Blush / Soft Rose Pink from reference) ──
+  bgMain: '#FDF2F0',        // Distinct soft blush pink background
+  bgCard: '#FFFFFF',        // Crisp white card surfaces
+  bgInput: '#FFF1F2',       // Light rose-tinted input background
+  bgNav: '#FFFFFF',         // White navigation bar
+  bgMuted: '#FFE4E6',       // Muted accent sections
+  bgOverlay: 'rgba(253, 242, 240, 0.96)',
+
+  // ── Palette ──
+  bgDark: '#FFE4E6',
+  cardDark: '#FFFFFF',
+  borderDark: '#FECDD3',
+  bgDarkMuted: '#FECDD3',
+
+  // ── Text ──
+  textPrimary: '#1E293B',   // Deep charcoal
+  textSecondary: '#64748B', // Cool slate secondary
+  textMuted: '#94A3B8',     // Muted gray
+  textInverse: '#FFFFFF',   // White text on red badges/buttons
+  textBrand: '#F43F5E',     // Light Red brand text
+
+  // ── Borders ──
+  border: '#FCE7E7',        // Soft rose-tinted border
+  borderStrong: '#FDA4AF',  // Rose border
+  borderBrand: 'rgba(244, 63, 94, 0.35)',
+
+  // ── Semantic Status Colors ──
+  success: '#10B981',
+  successBg: '#ECFDF5',
+  successBorder: 'rgba(16, 185, 129, 0.35)',
+
+  warning: '#F59E0B',
+  warningBg: '#FFFBEB',
+  warningBorder: 'rgba(245, 158, 11, 0.35)',
+
+  danger: '#F43F5E',
+  dangerBg: '#FFE4E6',
+  dangerBorder: 'rgba(244, 63, 94, 0.35)',
+
+  info: '#F43F5E',
+  infoBg: '#FFF1F2',
+  infoBorder: 'rgba(244, 63, 94, 0.35)',
+
+  // ── Table status backgrounds ──
+  tableLocked: { bg: '#FFE4E6', border: '#F43F5E' },
+  tableHold: { bg: '#FFF1F2', border: '#FDA4AF' },
+  tableSent: { bg: '#ECFDF5', border: '#10B981' },
+  tableSentOld: { bg: '#FFF1F2', border: '#E11D48' },
+  tableBillRequest: { bg: '#FFFBEB', border: '#F59E0B' },
+  tableEmpty: { bg: '#FFFFFF', border: '#F1E5E5' },
+};
+
 /**
  * Active POS Theme
  * Swap this export to change the theme across the app instantly!
  */
-export const Theme = ThemeSilverGray;
+export const Theme = ThemeCrimsonCoral;
 
 
 // Legacy Colors export to avoid breaking imports

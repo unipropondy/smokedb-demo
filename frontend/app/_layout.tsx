@@ -577,6 +577,7 @@ export default function RootLayout() {
             <Stack.Screen name="terminal-settings" />
             <Stack.Screen name="customer-display" />
             <Stack.Screen name="table-master" />
+            <Stack.Screen name="KioskCustomer" />
           </Stack>
           <StatusBar style="light" />
         </ToastProvider>

@@ -48,10 +48,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="kds"
         options={{
-          title: "Kitchen",
+          title: "Service Bay",
           href: enableKDS && (user?.role === "ADMIN" || user?.role === "MANAGER" || permissions["OPRSTK"]?.canRead) ? "/(tabs)/kds" : null,
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="fork.knife" color={color} />
+            <IconSymbol size={28} name="car.fill" color={color} />
           ),
         }}
       />

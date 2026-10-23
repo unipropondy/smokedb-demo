@@ -141,7 +141,7 @@ const OrderCard = React.memo(function OrderCard({ item, cardHeight, pulseAnim, g
               </Text>
             </View>
             <View style={styles.itemCountBadgeMuted}>
-              <Ionicons name="restaurant-outline" size={11} color="#666" />
+              <Ionicons name="car-sport-outline" size={11} color="#666" />
               <Text style={styles.itemCountMutedText}>
                 {totalUniqueDishes} dish{totalUniqueDishes !== 1 ? 'es' : ''}
               </Text>
@@ -612,7 +612,7 @@ export default function KDSScreen() {
                           onPress={() => !isReady && handleMarkReady(i.lineItemId)}
                         >
                           <Ionicons
-                            name={isReady ? "checkmark-circle" : "restaurant-outline"}
+                            name={isReady ? "checkmark-circle" : "car-sport"}
                             size={18}
                             color="#FFF"
                           />
@@ -655,8 +655,8 @@ export default function KDSScreen() {
               </Pressable>
             )}
             <View style={styles.logoAndTitle}>
-              <Ionicons name="fast-food" size={30} color={Theme.primary} />
-              <Text style={styles.screenTitle}>KDS</Text>
+              <Ionicons name="car-sport" size={30} color={Theme.primary} />
+              <Text style={styles.screenTitle}>BAYS</Text>
             </View>
           </View>
 

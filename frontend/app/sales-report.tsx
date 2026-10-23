@@ -296,7 +296,8 @@ export default function SalesReport() {
       Number(selectedOrder.DiscountAmount || 0) +
       Number(selectedOrder.ServiceCharge || 0) +
       Number(selectedOrder.TakeawayCharge || 0) +
-      Number(selectedOrder.TotalTax || 0)
+      Number(selectedOrder.TotalTax || 0) +
+      Number(selectedOrder.ExtraCharge || 0)
     : 0;
 
   const allocatedSplitsSum = useMemo(() => {
@@ -1380,6 +1381,7 @@ export default function SalesReport() {
           acc.TotalTax += Math.round(((Number(s.TotalTax) || 0) + Number.EPSILON) * 100) / 100;
           acc.TotalDiscount += Math.round(((Number(s.DiscountAmount) || 0) + Number.EPSILON) * 100) / 100;
           acc.TakeawayCharge += Math.round(((Number(s.TakeawayCharge) || 0) + Number.EPSILON) * 100) / 100;
+          acc.ExtraCharge += Math.round(((Number(s.ExtraCharge) || 0) + Number.EPSILON) * 100) / 100;
         }
 
         return acc;
@@ -1410,6 +1412,7 @@ export default function SalesReport() {
         TotalTax: 0,
         TotalDiscount: 0,
         TakeawayCharge: 0,
+        ExtraCharge: 0,
       },
     );
   }, [dateScopedSales]);
@@ -2657,6 +2660,12 @@ export default function SalesReport() {
           "#ec4899",
         )}
         {renderMetricTile(
+          "Extra Charge",
+          formatCurrency(filteredMetrics.ExtraCharge),
+          "flash-outline",
+          "#f97316",
+        )}
+        {renderMetricTile(
           "Discount Sales",
           formatCurrency(filteredMetrics.TotalDiscount),
           "pricetag-outline",
@@ -3245,7 +3254,7 @@ export default function SalesReport() {
                           name={
                             selectedOrder?.OrderType === "TAKEAWAY"
                               ? "bag-handle"
-                              : "restaurant"
+                              : "car-sport"
                           }
                           size={11}
                           color={Theme.textMuted}
@@ -3706,6 +3715,14 @@ export default function SalesReport() {
                       </Text>
                     </View>
                   )}
+                  {Number(selectedOrder?.ExtraCharge) > 0 && (
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                      <Text style={{ fontSize: 12, fontFamily: Fonts.semiBold, color: Theme.textSecondary }}>Extra Charge</Text>
+                      <Text style={{ fontSize: 13, fontFamily: Fonts.bold, color: Theme.textPrimary }}>
+                        {formatCurrency(selectedOrder?.ExtraCharge)}
+                      </Text>
+                    </View>
+                  )}
                   {Number(selectedOrder?.TotalTax) > 0 && (
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                       <Text style={{ fontSize: 12, fontFamily: Fonts.semiBold, color: Theme.textSecondary }}>GST</Text>
@@ -3714,7 +3731,7 @@ export default function SalesReport() {
                       </Text>
                     </View>
                   )}
-                  {(selectedOrder?.DiscountAmount > 0 || Number(selectedOrder?.ServiceCharge) > 0 || Number(selectedOrder?.TotalTax) > 0 || Number(selectedOrder?.TakeawayCharge) > 0) && (
+                  {(selectedOrder?.DiscountAmount > 0 || Number(selectedOrder?.ServiceCharge) > 0 || Number(selectedOrder?.TotalTax) > 0 || Number(selectedOrder?.TakeawayCharge) > 0 || Number(selectedOrder?.ExtraCharge) > 0) && (
                     <View style={{ height: 1, backgroundColor: Theme.border + "50", marginVertical: 2 }} />
                   )}
                   {/* Final total + paid badge */}

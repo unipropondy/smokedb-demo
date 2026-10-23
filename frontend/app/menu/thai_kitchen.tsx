@@ -1,4 +1,5 @@
 import { API_URL } from "@/constants/Config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -680,7 +681,25 @@ export default function MenuScreen() {
         ]}
       >
         {/* EXISTING WINDOW CONTROLS */}
-        <WindowControls buttonStyle={styles.headerBillBtn} />
+        <WindowControls
+          buttonStyle={[
+            styles.headerBillBtn,
+            {
+              backgroundColor: Theme.bgCard,
+              borderWidth: 1,
+              borderColor: Theme.border,
+              borderRadius: 14,
+            },
+            isPhone &&
+              isLandscape && {
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+              },
+          ]}
+          iconSize={isPhone && isLandscape ? 20 : 25}
+          iconColor="#374151"
+        />
 
         {/* REFRESH */}
         <TouchableOpacity
@@ -946,6 +965,26 @@ export default function MenuScreen() {
         await loadGroups(currentKitchens[0].CategoryId);
       }
       setIsInitialLoading(false);
+
+      // Check for a pending modifier/combo dish queued by the customer entry flow
+      try {
+        const orderCtx = useOrderContextStore.getState().currentOrder;
+        const tableId = orderCtx?.tableId ? String(orderCtx.tableId) : null;
+        if (tableId) {
+          const pendingKey = `pending_modifier_dish_${tableId}`;
+          const pendingRaw = await AsyncStorage.getItem(pendingKey);
+          if (pendingRaw) {
+            await AsyncStorage.removeItem(pendingKey);
+            const pendingDish = JSON.parse(pendingRaw);
+            // Small delay so the UI is fully rendered before opening the modal
+            setTimeout(() => {
+              openModifiers(pendingDish);
+            }, 400);
+          }
+        }
+      } catch (pendingErr) {
+        console.warn("[thai_kitchen] pending_modifier_dish check failed", pendingErr);
+      }
     };
     initMenu();
   }, []);
@@ -1392,12 +1431,12 @@ export default function MenuScreen() {
                       !isLoadingDishes && !isInitialLoading ? (
                         <View style={styles.emptyItemsState}>
                           <Ionicons
-                            name="restaurant-outline"
+                            name="car-outline"
                             size={64}
                             color={Theme.textMuted}
                           />
                           <Text style={styles.emptyItemsText}>
-                            No dish items added
+                            No car items added
                           </Text>
                         </View>
                       ) : null
@@ -1465,12 +1504,12 @@ export default function MenuScreen() {
                         !isLoadingDishes && !isInitialLoading ? (
                           <View style={styles.emptyItemsState}>
                             <Ionicons
-                              name="restaurant-outline"
+                              name="car-outline"
                               size={64}
                               color={Theme.textMuted}
                             />
                             <Text style={styles.emptyItemsText}>
-                              No dish items added
+                              No car items added
                             </Text>
                           </View>
                         ) : null
@@ -2181,10 +2220,9 @@ const styles = StyleSheet.create({
   },
   categoryNavigation: {
     marginBottom: 15,
-    backgroundColor: Theme.bgNav,
+    backgroundColor: "transparent",
     paddingVertical: 8,
-    borderRadius: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 0,
   },
   catScroll: { gap: 10 },
   catPill: {

@@ -379,7 +379,7 @@ export default function LockedTablesScreen() {
           }}
         >
           <Ionicons
-            name={status === 5 ? "lock-closed" : status === 4 ? "time" : status !== 0 ? "restaurant" : "lock-open-outline"}
+            name={status === 5 ? "lock-closed" : status === 4 ? "time" : status !== 0 ? "car-sport" : "lock-open-outline"}
             size={iconSize}
             color={status === 0 ? Theme.textSecondary : ui.color}
           />

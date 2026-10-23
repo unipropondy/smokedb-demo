@@ -500,23 +500,7 @@ const TableItemComponent = React.memo(
     const tableData = useTableStatusStore((state) => state.tableMap[tableId]);
     const terminalStatus = useTerminalPaymentStore((state) => state.sessions[tableId]?.status);
 
-    // ── Per-table Car Number from AsyncStorage ──────────────────────────────
-    const [storedCarNumber, setStoredCarNumber] = useState<string | null>(null);
-    useEffect(() => {
-      let cancelled = false;
-      AsyncStorage.getItem(`car_number_${tableId}`).then((val) => {
-        if (!cancelled) setStoredCarNumber(val || null);
-      }).catch(() => {});
-      return () => { cancelled = true; };
-    }, [tableId]);
-
-    // Listen for store-level carNumber updates to sync storedCarNumber in real time
-    useEffect(() => {
-      const storeCarNumber = (tableData as any)?.carNumber;
-      if (storeCarNumber) {
-        setStoredCarNumber(storeCarNumber);
-      }
-    }, [(tableData as any)?.carNumber]);
+    const storedCarNumber = (tableData as any)?.carNumber || item.carNumber || null;
 
     const status = tableData
       ? tableData.status === "SENT" ? 1
@@ -537,7 +521,7 @@ const TableItemComponent = React.memo(
 
     const rawEntryStatus = (tableData?.entryStatus !== undefined && tableData?.entryStatus !== null) ? tableData.entryStatus : item.entryStatus;
     const rawPaymentStatus = (tableData as any)?.paymentStatus !== undefined ? (tableData as any).paymentStatus : item.paymentStatus;
-    const isPaid = rawEntryStatus === "q" && Number(rawPaymentStatus) === 1;
+    const isPaid = status !== 0 && rawEntryStatus === "q" && Number(rawPaymentStatus) === 1;
 
     let timeText = "";
     if (rawStartTime && status !== 0 && status !== 5) {
@@ -551,14 +535,14 @@ const TableItemComponent = React.memo(
     };
     let ss: StatusStyle;
     if (isPaid) {
-      ss = { cardBg: ["#FFF1F2", "#FFE4E6"], badge: "#EF4444", badgeBg: "#FEF2F2", badgeBorder: "#FCA5A5", carColor: "#EF4444", textColor: "#EF4444", label: "PAID" };
+      ss = { cardBg: ["#FFF1F2", "#FFE4E6"], badge: "#E11D48", badgeBg: "#FFE4E6", badgeBorder: "#FDA4AF", carColor: "#E11D48", textColor: "#E11D48", label: "PAID" };
     } else {
       switch (effectiveStatus) {
-        case 1: ss = { cardBg: ["#EFF6FF", "#DBEAFE"], badge: "#3B82F6", badgeBg: "#EFF6FF", badgeBorder: "#93C5FD", carColor: "#3B82F6", textColor: "#1D4ED8", label: "Washing" }; break;
-        case 2: ss = { cardBg: ["#FFFBEB", "#FEF3C7"], badge: "#F97316", badgeBg: "#FFF7ED", badgeBorder: "#FED7AA", carColor: "#F97316", textColor: "#B45309", label: "Waiting" }; break;
-        case 4: ss = { cardBg: ["#F0FDF4", "#DCFCE7"], badge: "#22C55E", badgeBg: "#F0FDF4", badgeBorder: "#86EFAC", carColor: "#16A34A", textColor: "#15803D", label: "Completed" }; break;
-        case 5: ss = { cardBg: ["#F5F3FF", "#EDE9FE"], badge: "#8B5CF6", badgeBg: "#F5F3FF", badgeBorder: "#C4B5FD", carColor: "#8B5CF6", textColor: "#7C3AED", label: "Reserved" }; break;
-        default: ss = { cardBg: ["#FFFFFF", "#F3F4F6"], badge: "#4B5563", badgeBg: "#F9FAFB", badgeBorder: "#E5E7EB", carColor: "#9CA3AF", textColor: "#4B5563", label: "Available" };
+        case 1: ss = { cardBg: ["#EFF6FF", "#DBEAFE"], badge: "#2563EB", badgeBg: "#DBEAFE", badgeBorder: "#93C5FD", carColor: "#2563EB", textColor: "#1D4ED8", label: "Washing" }; break;
+        case 2: ss = { cardBg: ["#FFFBEB", "#FEF3C7"], badge: "#F59E0B", badgeBg: "#FEF3C7", badgeBorder: "#FDE68A", carColor: "#F59E0B", textColor: "#B45309", label: "Waiting" }; break;
+        case 4: ss = { cardBg: ["#F0FDF4", "#DCFCE7"], badge: "#10B981", badgeBg: "#DCFCE7", badgeBorder: "#A7F3D0", carColor: "#10B981", textColor: "#047857", label: "Completed" }; break;
+        case 5: ss = { cardBg: ["#F5F3FF", "#EDE9FE"], badge: "#8B5CF6", badgeBg: "#EDE9FE", badgeBorder: "#DDD6FE", carColor: "#8B5CF6", textColor: "#6D28D9", label: "Reserved" }; break;
+        default: ss = { cardBg: ["#FFFFFF", "#FFFFFF"], badge: "#64748B", badgeBg: "#F1F5F9", badgeBorder: "#E2E8F0", carColor: "#94A3B8", textColor: "#475569", label: "Available" };
       }
     }
 
@@ -579,7 +563,7 @@ const TableItemComponent = React.memo(
         width: cardW,
         height: cardH,
       }
-      : { width: cardW, margin: 6 };
+      : { flex: 1, width: "100%", height: "100%" };
 
     return (
       <TouchableOpacity
@@ -591,15 +575,16 @@ const TableItemComponent = React.memo(
           colors={ss.cardBg}
           style={{
             flex: 1,
-            borderRadius: 14,
-            padding: 8, // Reduced padding to fit text
+            borderRadius: 18,
+            padding: 10,
             minHeight: isAbsoluteLayout ? undefined : cardH,
             borderWidth: 1,
-            borderColor: isOccupied ? ss.badgeBorder : "#6B7280",
+            borderColor: isOccupied ? ss.badgeBorder : "#E2E8F0",
+            backgroundColor: "#FFFFFF",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.08,
-            shadowRadius: 6,
+            shadowOpacity: 0.05,
+            shadowRadius: 8,
             elevation: isOccupied ? 3 : 1,
           }}
         >
@@ -1300,7 +1285,6 @@ export default function Category() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
       const data = await response.json();
-      console.log("TABLES API DATA:", JSON.stringify(data, null, 2));
       let tablesArray: any[] = [];
       if (Array.isArray(data)) tablesArray = data;
       else if (data?.data && Array.isArray(data.data)) tablesArray = data.data;
@@ -1531,6 +1515,22 @@ export default function Category() {
 
   const tableMap = useTableStatusStore((state) => state.tableMap);
 
+  const { occupiedBaysCount, availableBaysCount } = useMemo(() => {
+    let occ = 0;
+    currentTables.forEach((t) => {
+      const s = tableMap[t.id]?.status;
+      if (s === "SENT" || s === "BILL_REQUESTED" || s === "HOLD" || s === "LOCKED") {
+        occ++;
+      } else if (Number(t.Status) > 0 && Number(t.Status) !== 0) {
+        occ++;
+      }
+    });
+    return {
+      occupiedBaysCount: occ,
+      availableBaysCount: Math.max(0, currentTables.length - occ),
+    };
+  }, [currentTables, tableMap]);
+
   // ———— STATUS HANDLERS (OPTIMISTIC) ————
   const updateTableStatus = async (
     tableId: string,
@@ -1731,40 +1731,81 @@ export default function Category() {
   };
 
   const handleCustomerContinue = async () => {
-    // If we have inputs, save/update customer in backend
+    // Validate that car number is provided
+    if (!carNumberInput.trim()) {
+      Alert.alert("Car Number Required", "Please enter a car number before continuing.");
+      return;
+    }
+
+    // Save/update customer in backend
     let customerVehicleId = foundCustomerVehicleId;
-    if (carNumberInput.trim()) {
-      try {
-        if (!foundCustomerVehicleId) {
-          // Create new record
-          const res = await fetch(`${API_URL}/api/kiosk-customers`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              carNumber: carNumberInput,
-              customerName: customerNameInput,
-              storeId: user?.shop_id || 1,
-              createdBy: user?.username || "POS",
-            }),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            customerVehicleId = data.customerVehicleId;
-          }
+    try {
+      if (!foundCustomerVehicleId) {
+        // Create new record in KioskCustomer table
+        const res = await fetch(`${API_URL}/api/kiosk-customers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            carNumber: carNumberInput.trim().toUpperCase(),
+            customerName: customerNameInput.trim() || null,
+            storeId: user?.shop_id || 1,
+            createdBy: user?.username || "POS",
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          customerVehicleId = data.customerVehicleId;
         } else {
-          // Update existing record with new name
-          await fetch(`${API_URL}/api/kiosk-customers/${foundCustomerVehicleId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              customerName: customerNameInput,
-              updatedBy: user?.username || "POS",
-            }),
-          });
+          // If creation failed (e.g. duplicate car number), try to find existing record
+          const searchRes = await fetch(
+            `${API_URL}/api/kiosk-customers/search?carNumber=${encodeURIComponent(carNumberInput.trim())}`
+          );
+          if (searchRes.ok) {
+            const searchData = await searchRes.json();
+            if (searchData.found && searchData.customer) {
+              customerVehicleId = searchData.customer.CustomerVehicleId;
+              // Update the existing record with the new name
+              await fetch(`${API_URL}/api/kiosk-customers/${customerVehicleId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  customerName: customerNameInput.trim() || null,
+                  updatedBy: user?.username || "POS",
+                }),
+              });
+            } else {
+              const errBody = await res.text().catch(() => "Unknown error");
+              console.error("Failed to create customer:", errBody);
+              Alert.alert("Error", `Could not save customer record: ${errBody}`);
+              return;
+            }
+          } else {
+            const errBody = await res.text().catch(() => "Unknown error");
+            console.error("Failed to create customer:", errBody);
+            Alert.alert("Error", `Could not save customer record: ${errBody}`);
+            return;
+          }
         }
-      } catch (err) {
-        console.error("Failed to save/update customer:", err);
+      } else {
+        // Update existing record with new name
+        const putRes = await fetch(`${API_URL}/api/kiosk-customers/${foundCustomerVehicleId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customerName: customerNameInput.trim() || null,
+            updatedBy: user?.username || "POS",
+          }),
+        });
+        if (!putRes.ok) {
+          const errBody = await putRes.text().catch(() => "Unknown error");
+          console.error("Failed to update customer:", errBody);
+          // Non-fatal: continue even if update fails
+        }
       }
+    } catch (err: any) {
+      console.error("Failed to save/update customer:", err);
+      Alert.alert("Network Error", err.message || "Could not reach the server. Please check your connection.");
+      return;
     }
 
     // Pass the customer details down via pendingCustomerTableData
@@ -1781,10 +1822,15 @@ export default function Category() {
       const trimmedCustomerName = customerNameInput.trim();
       const targetTableId = pendingCustomerItem.id;
 
-      // Save the car number to AsyncStorage keyed by tableId so it persists
+      // Save the car number and customer name to AsyncStorage keyed by tableId so it persists
       // across refreshes and only appears on this specific bay card
       if (trimmedCarNumber) {
-        AsyncStorage.setItem(`car_number_${targetTableId}`, trimmedCarNumber).catch(() => {});
+        AsyncStorage.setItem(`car_number_${targetTableId}`, trimmedCarNumber).catch(() => { });
+      }
+      if (trimmedCustomerName) {
+        AsyncStorage.setItem(`customer_name_${targetTableId}`, trimmedCustomerName).catch(() => { });
+      } else {
+        AsyncStorage.removeItem(`customer_name_${targetTableId}`).catch(() => { });
       }
 
       await proceedWithTable(pendingCustomerItem, tableDataWithCustomer);
@@ -1821,16 +1867,39 @@ export default function Category() {
           const dishRes = await fetch(`${API_URL}/api/menu/dishes/${foundCustomerDefaultDishId}`);
           if (dishRes.ok) {
             const dish = await dishRes.json();
-            await useCartStore.getState().addToCartGlobal({
-              id: dish.DishId,
-              name: dish.Name,
-              price: dish.Price,
-              basePrice: dish.Price,
-              categoryName: dish.KitchenTypeName || "KITCHEN",
-              KitchenTypeName: dish.KitchenTypeName,
-              isCombo: dish.IsCombo === 1,
-              isTakeaway: false, // Default to dine-in, gets overridden if context is takeaway
-            } as any); // using 'as any' to satisfy Omit typing flexibly
+
+            // Check if dish has modifiers or is a combo – if so, defer to modifier window
+            const isComboEnabled = true; // always respect combo flag
+            const isItCombo = isComboEnabled && (dish.IsCombo === 1 || dish.IsCombo === true || String(dish.IsCombo) === "1");
+
+            let hasModifiers = false;
+            try {
+              const modRes = await fetch(`${API_URL}/api/menu/modifiers/${dish.DishId}`);
+              if (modRes.ok) {
+                const modData = await modRes.json();
+                hasModifiers = Array.isArray(modData) && modData.length > 0;
+              }
+            } catch (_) { }
+
+            if (isItCombo || hasModifiers) {
+              // Store the pending dish so thai_kitchen opens the modifier window on arrival
+              await AsyncStorage.setItem(
+                `pending_modifier_dish_${targetTableId}`,
+                JSON.stringify({ DishId: dish.DishId, Name: dish.Name, Price: dish.Price, IsCombo: dish.IsCombo, KitchenTypeName: dish.KitchenTypeName })
+              );
+            } else {
+              // No modifiers – safe to add directly
+              await useCartStore.getState().addToCartGlobal({
+                id: dish.DishId,
+                name: dish.Name,
+                price: dish.Price,
+                basePrice: dish.Price,
+                categoryName: dish.KitchenTypeName || "KITCHEN",
+                KitchenTypeName: dish.KitchenTypeName,
+                isCombo: false,
+                isTakeaway: false,
+              } as any);
+            }
           }
         } catch (err) {
           console.error("Failed to add default dish to cart:", err);
@@ -1885,7 +1954,10 @@ export default function Category() {
         tableData?.entryStatus !== undefined
           ? tableData.entryStatus
           : item.entryStatus;
-      if (tableEntryStatus === "q" && tablePaymentStatus === 1) {
+      const tableRawStatus = (tableData as any)?.status !== undefined
+        ? Number((tableData as any).status)
+        : Number(item.Status) || 0;
+      if (tableEntryStatus === "q" && tablePaymentStatus === 1 && tableRawStatus !== 0) {
         Alert.alert(
           "Order Already Paid",
           `Table ${item.label} order has been paid. What would you like to do?`,
@@ -2418,16 +2490,16 @@ export default function Category() {
   }
 
   const renderLicenseView = (isFloating: boolean) => {
-    if (!companyInfo) return null;
+    const info = companyInfo || {};
 
-    const fromDate = (user?.licenseFromDate || companyInfo.LicenseFromDate)
-      ? (user?.licenseFromDate || companyInfo.LicenseFromDate).split("T")[0]
-      : "N/A";
-    const toDate = (user?.licenseToDate || companyInfo.LicenseToDate)
-      ? (user?.licenseToDate || companyInfo.LicenseToDate).split("T")[0]
-      : "N/A";
+    const fromDate = (user?.licenseFromDate || info.LicenseFromDate)
+      ? (user?.licenseFromDate || info.LicenseFromDate).split("T")[0]
+      : "2026-06-01";
+    const toDate = (user?.licenseToDate || info.LicenseToDate)
+      ? (user?.licenseToDate || info.LicenseToDate).split("T")[0]
+      : "2028-07-28";
 
-    const hasLicense = (user?.licenseFromDate || user?.licenseToDate || companyInfo.LicenseFromDate || companyInfo.LicenseToDate);
+    const hasLicense = true;
 
     return (
       <View style={isFloating ? {
@@ -2438,152 +2510,169 @@ export default function Category() {
         pointerEvents: "none",
         zIndex: 9999,
       } : {
-        paddingHorizontal: PADDING,
-        paddingTop: 16,
-        paddingBottom: Math.max(insets.bottom + 24, 36),
-        alignItems: "flex-start",
+        width: "100%",
+        paddingHorizontal: 4,
+        paddingTop: 8,
+        paddingBottom: 10,
+        alignItems: "center",
         justifyContent: "center",
-        marginTop: 12,
       }}>
-        <LinearGradient
-          colors={["#FFFFFF", "#F8FAFC"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
+            backgroundColor: "#FFFFFF",
             borderRadius: 16,
+            borderWidth: 1.5,
+            borderColor: Theme.borderStrong,
             padding: 12,
-            borderWidth: 1,
-            borderColor: "#E2E8F0",
-            maxWidth: 380,
-            width: isFloating ? 320 : "100%",
-            gap: 12,
-            shadowColor: "#6366F1",
+            width: "100%",
+            gap: 10,
+            shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.04,
-            shadowRadius: 6,
-            elevation: 1,
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+            elevation: 3,
           }}
         >
-          {companyInfo.CompanyLogoUrl ? (
-            <View style={{
-              borderRadius: 8,
-              borderWidth: 1,
-              borderColor: "#E2E8F0",
-              padding: 2,
-              backgroundColor: "#FFFFFF",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.03,
-              shadowRadius: 1,
-              elevation: 1,
-            }}>
-              <Image
-                source={{ uri: companyInfo.CompanyLogoUrl }}
-                style={{ width: 46, height: 46, borderRadius: 8 }}
-                contentFit="contain"
-              />
-            </View>
-          ) : (
-            <LinearGradient
-              colors={["#EEF2FF", "#E0E7FF"]}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 1,
-                borderColor: "#E0E7FF",
-              }}
-            >
-              <Ionicons name="storefront" size={22} color="#4F46E5" />
-            </LinearGradient>
-          )}
-
-          <View style={{ flex: 1, gap: 2 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
-              <Text style={{
-                fontFamily: Fonts.bold,
-                fontSize: 14,
-                color: "#1E293B",
-                letterSpacing: 0.1,
-              }}>
-                {companyInfo.CompanyName || "Smart POS"}
-              </Text>
-
-              {hasLicense && (
-                <View style={{
-                  flexDirection: "row",
+          {/* TOP ROW: Logo, Name, Address & Active Badge */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            {info.CompanyLogoUrl ? (
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "#FECDD3",
+                  backgroundColor: "#FFF1F2",
+                  justifyContent: "center",
                   alignItems: "center",
-                  backgroundColor: "#DCFCE7",
-                  paddingHorizontal: 7,
-                  paddingVertical: 3,
-                  borderRadius: 8,
-                  gap: 3,
-                }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#15803D" }} />
-                  <Text style={{
+                  overflow: "hidden",
+                }}
+              >
+                <Image
+                  source={{ uri: info.CompanyLogoUrl }}
+                  style={{ width: 36, height: 36 }}
+                  contentFit="contain"
+                />
+              </View>
+            ) : (
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "#FECDD3",
+                  backgroundColor: "#FFF1F2",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons name="storefront-outline" size={22} color={Theme.primary} />
+              </View>
+            )}
+
+            <View style={{ flex: 1, gap: 2 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                <Text
+                  style={{
                     fontFamily: Fonts.bold,
-                    fontSize: 10,
-                    color: "#166534",
-                    textTransform: "uppercase",
-                    letterSpacing: 0.2,
-                  }}>
+                    fontSize: 13.5,
+                    color: "#0F172A",
+                  }}
+                  numberOfLines={1}
+                >
+                  {info.CompanyName || "My Restaurant"}
+                </Text>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#DCFCE7",
+                    paddingHorizontal: 8,
+                    paddingVertical: 2.5,
+                    borderRadius: 12,
+                    gap: 4,
+                  }}
+                >
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#16A34A" }} />
+                  <Text
+                    style={{
+                      fontFamily: Fonts.bold,
+                      fontSize: 10,
+                      color: "#15803D",
+                      textTransform: "uppercase",
+                      letterSpacing: 0.3,
+                    }}
+                  >
                     Active
                   </Text>
                 </View>
-              )}
+              </View>
+
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                <Ionicons name="location-sharp" size={11} color="#64748B" />
+                <Text
+                  style={{
+                    fontFamily: Fonts.medium,
+                    fontSize: 11,
+                    color: "#64748B",
+                    flex: 1,
+                  }}
+                  numberOfLines={1}
+                >
+                  {info.Address || "123 ABC SINGAPORE"}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* MIDDLE: Valid From → Valid Until Badge */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              backgroundColor: "#FFF1F2",
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: "#FECDD3",
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name="calendar-outline" size={16} color={Theme.primary} />
+              <View>
+                <Text style={{ fontFamily: Fonts.medium, fontSize: 8.5, color: "#94A3B8" }}>Valid From</Text>
+                <Text style={{ fontFamily: Fonts.bold, fontSize: 11, color: "#0F172A" }}>{fromDate}</Text>
+              </View>
             </View>
 
-            {companyInfo.Address ? (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Ionicons name="location-outline" size={12} color="#64748B" />
-                <Text style={{
-                  fontFamily: Fonts.medium,
-                  fontSize: 11.5,
-                  color: "#64748B",
-                  flex: 1,
-                }} numberOfLines={1}>
-                  {companyInfo.Address}
-                </Text>
-              </View>
-            ) : null}
+            <Ionicons name="arrow-forward" size={14} color="#CBD5E1" />
 
-            {hasLicense ? (
-              <View style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-                marginTop: 2,
-                backgroundColor: "#F1F5F9",
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 6,
-                alignSelf: "flex-start"
-              }}>
-                <Ionicons name="shield-checkmark" size={13} color="#10B981" />
-                <Text style={{
-                  fontFamily: Fonts.semiBold,
-                  fontSize: 10.5,
-                  color: "#475569",
-                }}>
-                  Valid: <Text style={{ color: "#0F172A", fontFamily: Fonts.bold }}>{fromDate}</Text> to <Text style={{ color: "#0F172A", fontFamily: Fonts.bold }}>{toDate}</Text>
-                </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name="calendar" size={16} color="#059669" />
+              <View>
+                <Text style={{ fontFamily: Fonts.medium, fontSize: 8.5, color: "#94A3B8" }}>Valid Until</Text>
+                <Text style={{ fontFamily: Fonts.bold, fontSize: 11, color: "#0F172A" }}>{toDate}</Text>
               </View>
-            ) : null}
+            </View>
+          </View>
 
-            <Text style={{
+          {/* FOOTER: Copyright */}
+          <Text
+            style={{
               fontFamily: Fonts.medium,
               fontSize: 9.5,
               color: "#94A3B8",
-              marginTop: 2,
-            }}>
-              © 2026 UNIPRO. All rights reserved.
-            </Text>
-          </View>
-        </LinearGradient>
+              textAlign: "center",
+            }}
+          >
+            © 2026 UNIPRO POS. All rights reserved.
+          </Text>
+        </View>
       </View>
     );
   };
@@ -2790,7 +2879,7 @@ export default function Category() {
                   activeOpacity={0.75}
                 >
                   <Ionicons
-                    name="restaurant-outline"
+                    name="car-sport-outline"
                     size={18}
                     color={Theme.success}
                   />
@@ -2903,19 +2992,6 @@ export default function Category() {
               isLandscape && { height: 42, paddingVertical: 2, gap: 8 },
             ]}
           >
-            {/* LEFT - Branding Logo */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
-              <View style={{ marginRight: 8 }}>
-                <Ionicons name="car-sport" size={32} color="#1D4ED8" />
-                <Ionicons name="water" size={16} color="#3B82F6" style={{ position: 'absolute', top: -4, right: -4 }} />
-                <Ionicons name="sparkles" size={12} color="#60A5FA" style={{ position: 'absolute', bottom: -2, left: -4 }} />
-              </View>
-              <View>
-                <Text style={{ fontFamily: Fonts.black, fontSize: 18, color: '#1E293B', letterSpacing: 0.5, lineHeight: 20 }}>Car Wash</Text>
-                <Text style={{ fontFamily: Fonts.bold, fontSize: 8, color: '#3B82F6', letterSpacing: 0.5 }}>CLEAN RIDE  •  HAPPY DRIVE</Text>
-              </View>
-            </View>
-
             {/* CENTER — Section Tabs */}
             <ScrollView
               ref={sectionScrollRef}
@@ -3018,7 +3094,7 @@ export default function Category() {
                   activeOpacity={0.75}
                 >
                   <Ionicons
-                    name="restaurant-outline"
+                    name="car-sport-outline"
                     size={20}
                     color={Theme.success}
                   />
@@ -3074,7 +3150,7 @@ export default function Category() {
                     <Text
                       style={[styles.headerActionText, { color: Theme.info }]}
                     >
-                      KDS
+                      Bay KDS
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -3204,19 +3280,6 @@ export default function Category() {
             isLandscape && { height: 42, paddingVertical: 2, gap: 8 },
           ]}
         >
-          {/* LEFT - Branding Logo */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
-            <View style={{ marginRight: 8 }}>
-              <Ionicons name="car-sport" size={32} color="#1D4ED8" />
-              <Ionicons name="water" size={16} color="#3B82F6" style={{ position: 'absolute', top: -4, right: -4 }} />
-              <Ionicons name="sparkles" size={12} color="#60A5FA" style={{ position: 'absolute', bottom: -2, left: -4 }} />
-            </View>
-            <View>
-              <Text style={{ fontFamily: Fonts.black, fontSize: 18, color: '#1E293B', letterSpacing: 0.5, lineHeight: 20 }}>Car Wash</Text>
-              <Text style={{ fontFamily: Fonts.bold, fontSize: 8, color: '#3B82F6', letterSpacing: 0.5 }}>CLEAN RIDE  •  HAPPY DRIVE</Text>
-            </View>
-          </View>
-
           {/* CENTER — Section Tabs */}
           <ScrollView
             ref={sectionScrollRef}
@@ -3381,7 +3444,7 @@ export default function Category() {
                 activeOpacity={0.75}
               >
                 <Ionicons
-                  name="restaurant-outline"
+                  name="car-sport-outline"
                   size={20}
                   color={Theme.success}
                 />
@@ -3442,7 +3505,7 @@ export default function Category() {
                   <Text
                     style={[styles.headerActionText, { color: Theme.info }]}
                   >
-                    KDS
+                    Bay KDS
                   </Text>
                 )}
               </TouchableOpacity>
@@ -3596,32 +3659,105 @@ export default function Category() {
               { maxHeight: height * 0.8 },
             ]}
           >
-            {/* User Info Header */}
+            {/* User Info Header - Matching Soft Blush Pink / Crimson Brand */}
             {user && (
               <LinearGradient
-                colors={[Theme.primary, Theme.primaryDark]}
+                colors={["#FFF1F2", "#FFE4E6"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={styles.menuUserSectionGradient}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: 14,
+                  borderRadius: 18,
+                  marginBottom: 10,
+                  borderWidth: 1,
+                  borderColor: "#FECDD3",
+                }}
               >
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => setIsAvatarModalVisible(true)}
-                  style={[styles.menuAvatarPremium, { overflow: "hidden" }]}
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    backgroundColor: "#FFFFFF",
+                    borderWidth: 2,
+                    borderColor: Theme.primary,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    position: "relative",
+                  }}
                 >
                   {avatarUrl ? (
                     <Image
                       source={getAvatarSource(avatarUrl)}
-                      style={{ width: "100%", height: "100%" }}
+                      style={{ width: "100%", height: "100%", borderRadius: 26 }}
                       placeholder={require("../../assets/images/logo_pos.png")}
                     />
                   ) : (
-                    <Ionicons name="person" size={20} color="#9CA3AF" />
+                    <Ionicons name="person" size={26} color={Theme.primary} />
                   )}
+                  <View
+                    style={{
+                      position: "absolute",
+                      bottom: -2,
+                      right: -2,
+                      width: 18,
+                      height: 18,
+                      borderRadius: 9,
+                      backgroundColor: Theme.primary,
+                      borderWidth: 1.5,
+                      borderColor: "#FFFFFF",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Ionicons name="camera" size={9} color="#FFFFFF" />
+                  </View>
                 </TouchableOpacity>
-                <View>
-                  <Text style={styles.menuUserNamePremium}>{user.fullName}</Text>
-                  <Text style={styles.menuUserRolePremium}>{user.roleName}</Text>
+
+                <View style={{ flex: 1, gap: 4 }}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontFamily: Fonts.extraBold,
+                      color: "#1E293B",
+                      letterSpacing: 0.3,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {user.fullName || "UNIPRO"}
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      backgroundColor: "#FFF",
+                      alignSelf: "flex-start",
+                      paddingHorizontal: 8,
+                      paddingVertical: 2.5,
+                      borderRadius: 10,
+                      borderWidth: 1,
+                      borderColor: "#FECDD3",
+                    }}
+                  >
+                    <Ionicons name="shield-checkmark" size={11} color={Theme.primary} />
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontFamily: Fonts.extraBold,
+                        color: Theme.primary,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.4,
+                      }}
+                    >
+                      {user.roleName || "ADMIN"}
+                    </Text>
+                  </View>
                 </View>
               </LinearGradient>
             )}
@@ -4292,7 +4428,27 @@ export default function Category() {
                     <Text style={styles.subMenuItemText}>Cash Drawer</Text>
                   </TouchableOpacity>
 
-                  {/* Table QR Codes */}
+                  {/* Kiosk Customer */}
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    style={styles.subMenuItem}
+                    onPress={() => {
+                      setIsMenuVisible(false);
+                      router.push("/KioskCustomer" as any);
+                    }}
+                  >
+                    <View
+                      style={[
+                        styles.menuIconContainer,
+                        { backgroundColor: "#F97316" + "15" },
+                      ]}
+                    >
+                      <Ionicons name="car-sport-outline" size={18} color="#F97316" />
+                    </View>
+                    <Text style={styles.subMenuItemText}>Kiosk Customer</Text>
+                  </TouchableOpacity>
+
+
                   <TouchableOpacity
                     activeOpacity={0.7}
                     style={styles.subMenuItem}
@@ -4407,6 +4563,11 @@ export default function Category() {
                 </Text>
               </TouchableOpacity>
             </ScrollView>
+
+            {/* License Card pinned at bottom of Menu Drawer */}
+            <View style={{ marginTop: 10, paddingTop: 6, borderTopWidth: 1, borderTopColor: Theme.border }}>
+              {renderLicenseView(false)}
+            </View>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -4444,7 +4605,7 @@ export default function Category() {
               <View>
                 <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: Theme.textSecondary }}>Occupied</Text>
                 <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: Theme.textPrimary, marginTop: -2 }}>
-                  {currentTables.filter(t => { const s = tableMap[t.id]?.status; return s === 'SENT' || s === 'BILL_REQUESTED' || s === 'HOLD' || s === 'LOCKED'; }).length}
+                  {occupiedBaysCount}
                 </Text>
               </View>
             </View>
@@ -4456,7 +4617,7 @@ export default function Category() {
               <View>
                 <Text style={{ fontFamily: Fonts.medium, fontSize: 10, color: Theme.textSecondary }}>Available</Text>
                 <Text style={{ fontFamily: Fonts.black, fontSize: 20, color: Theme.textPrimary, marginTop: -2 }}>
-                  {currentTables.filter(t => { const s = tableMap[t.id]?.status; return !s || s === 'EMPTY'; }).length || currentTables.filter(t => Number(t.Status) === 0).length}
+                  {availableBaysCount}
                 </Text>
               </View>
             </View>
@@ -4464,7 +4625,7 @@ export default function Category() {
             {/* Legend */}
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
               {[
-                { color: Theme.info, label: 'Washing' },
+                { color: '#2563EB', label: 'Washing' },
                 { color: Theme.tableSentOld.border, label: 'Waiting' },
                 { color: Theme.success, label: 'Completed' },
                 { color: Theme.textMuted, label: 'Available' },
@@ -4482,16 +4643,7 @@ export default function Category() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
               paddingBottom: isTablet ? 160 : 100,
-              minHeight: (() => {
-                let maxBottom = 0;
-                currentTables.forEach((item, index) => {
-                  const ySize = item.YSize && Number(item.YSize) > 0 ? Number(item.YSize) : 200;
-                  const defaultY = 14 + Math.floor(index / 7) * (200 + 12);
-                  const finalY = item.YPos !== undefined && item.YPos !== null && item.YPos > 0 ? item.YPos : defaultY;
-                  if (finalY + ySize > maxBottom) maxBottom = finalY + ySize;
-                });
-                return Math.max(600, maxBottom + 50);
-              })()
+              minHeight: Math.max(600, Math.ceil(currentTables.length / 8) * (195 + 12) + 60),
             }}
           >
             {currentTables.length === 0 ? (
@@ -4504,41 +4656,42 @@ export default function Category() {
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={{ width: '100%', height: '100%', position: 'relative' }}>
+              <View
+                style={{
+                  width: '100%',
+                  flexDirection: 'row',
+                  flexWrap: 'wrap',
+                  paddingHorizontal: 12,
+                  paddingVertical: 14,
+                  gap: 10,
+                }}
+              >
                 {currentTables.map((item, index) => {
-                  // Apply 7-column grid fallback if coordinates are missing
-                  const COLS = 7;
-                  const CARD_W = 150;
-                  const CARD_H = 200;
-                  const GAP = 12;
-                  const OFFSET_X = 14;
-                  const OFFSET_Y = 14;
-
-                  const defaultX = OFFSET_X + (index % COLS) * (CARD_W + GAP);
-                  const defaultY = OFFSET_Y + Math.floor(index / COLS) * (CARD_H + GAP);
-
-                  const computedItem = {
-                    ...item,
-                    XPos: item.XPos !== undefined && item.XPos !== null && item.XPos > 0 ? item.XPos : defaultX,
-                    YPos: item.YPos !== undefined && item.YPos !== null && item.YPos > 0 ? item.YPos : defaultY,
-                  };
-
                   return (
-                    <TableItemComponent
+                    <View
                       key={item.id}
-                      tableId={item.id}
-                      item={computedItem}
-                      itemSize={isTablet ? 180 : 150}
-                      activeTab={activeTab}
-                      onPress={handleTablePress}
-                      numberFont={numberFont}
-                      smallFont={smallFont}
-                      isTabletPortrait={!isLandscape && isTablet}
-                      backgroundTheme={backgroundTheme}
-                      isTablet={isTablet}
-                      isAbsoluteLayout={true}
-                      layoutScale={1}
-                    />
+                      style={{
+                        width: '11.4%',
+                        flexGrow: 1,
+                        maxWidth: '12.5%',
+                        height: 195,
+                      }}
+                    >
+                      <TableItemComponent
+                        tableId={item.id}
+                        item={item}
+                        itemSize={isTablet ? 180 : 150}
+                        activeTab={activeTab}
+                        onPress={handleTablePress}
+                        numberFont={numberFont}
+                        smallFont={smallFont}
+                        isTabletPortrait={!isLandscape && isTablet}
+                        backgroundTheme={backgroundTheme}
+                        isTablet={isTablet}
+                        isAbsoluteLayout={false}
+                        layoutScale={1}
+                      />
+                    </View>
                   );
                 })}
               </View>
@@ -5162,7 +5315,7 @@ export default function Category() {
                 <Ionicons
                   name={
                     moveStep === "source"
-                      ? "restaurant-outline"
+                      ? "car-sport-outline"
                       : "checkmark-circle-outline"
                   }
                   size={44}
@@ -5683,8 +5836,6 @@ export default function Category() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-
-      {renderLicenseView(true)}
     </SafeAreaView>
   );
 }
@@ -6110,7 +6261,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 8,
     right: 8,
-    backgroundColor: "#F59E0B",
+    backgroundColor: "#F43F5E",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,

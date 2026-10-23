@@ -123,12 +123,12 @@ export default function KitchenStatusScreen() {
         <View style={{ alignItems: 'flex-end', gap: 6 }}>
           <View style={[styles.statusBadge, isReady ? styles.statusBadgeReady : styles.statusBadgePrep]}>
             <Ionicons 
-              name={isReady ? "notifications" : "restaurant"} 
+              name={isReady ? "notifications" : "car-sport"} 
               size={12} 
               color="#FFF" 
             />
             <Text style={styles.statusBadgeText}>
-              {isReady ? "READY" : "COOKING"}
+              {isReady ? "READY" : "IN SERVICE"}
             </Text>
           </View>
 
@@ -160,7 +160,7 @@ export default function KitchenStatusScreen() {
           <View style={styles.headerInfo}>
             <View style={styles.iconCircle}>
               <Ionicons 
-                name={isDineIn ? "restaurant" : "bag-handle"} 
+                name={isDineIn ? "car-sport" : "bag-handle"} 
                 size={18} 
                 color={isDineIn ? Theme.primary : Theme.warning} 
               />
@@ -241,7 +241,7 @@ export default function KitchenStatusScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconCircle}>
-              <Ionicons name="restaurant-outline" size={60} color={Theme.textMuted} />
+              <Ionicons name="car-sport-outline" size={60} color={Theme.textMuted} />
             </View>
             <Text style={styles.emptyText}>All orders served! 🎉</Text>
           </View>
