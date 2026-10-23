@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { poolPromise } = require("../config/db");
+const sql = require("mssql");
 const sharp = require("sharp");
 
 // 🚀 PERFORMANCE CACHE
@@ -30,10 +31,10 @@ router.get("/kitchens", async (req, res) => {
 
     const pool = await poolPromise;
     const result = await pool.request().query(`
-      SELECT cm.CategoryId, cm.CategoryName AS KitchenTypeName, ckt.KitchenTypeCode, cm.SortCode, ISNULL(cm.IsPublished, 0) AS IsPublished
+     SELECT cm.CategoryId, cm.CategoryName AS KitchenTypeName, ckt.KitchenTypeCode, cm.SortCode, ISNULL(cm.IsPublished, 0) AS IsPublished
       FROM CategoryMaster cm
       LEFT JOIN CategoryKitchenType ckt ON cm.CategoryId = ckt.CategoryId
-      WHERE cm.IsActive = 1
+      WHERE cm.IsActive = 1 and IsPublished =0
       ORDER BY cm.SortCode ASC, cm.CategoryName ASC
     `);
     setCache("kitchens", result.recordset);
@@ -57,7 +58,7 @@ router.get("/dishgroups/all", async (req, res) => {
         DishGroupName,
         ISNULL(IsPublished, 0) AS IsPublished
       FROM DishGroupMaster
-      WHERE IsActive = 1
+      WHERE IsActive = 1 and IsPublished =0
       ORDER BY DishGroupName ASC
     `);
     setCache(cacheKey, result.recordset);
@@ -88,7 +89,7 @@ router.get("/dishgroups/:CategoryId", async (req, res) => {
               ON a.DishGroupId = dkt.DishGroupId
           LEFT JOIN CategoryMaster cm
               ON cm.CategoryId = @CategoryId
-          WHERE a.IsActive = 1
+          WHERE a.IsActive = 1 and a.IsPublished =0
           AND (
                 a.CategoryId = @CategoryId
                 OR dkt.KitchenTypeName = cm.CategoryName
@@ -144,6 +145,48 @@ router.get("/dishes/all", async (req, res) => {
     res.json(result.recordset);
   } catch (err) {
     res.status(500).send(err.message);
+  }
+});
+
+// ─── GET /api/menu/dishes/:dishId ─────────────────────────────────────────────
+// Fetch a single dish by its DishId (GUID) — used to resolve DefaultDishId from kioskCustomer
+router.get("/dishes/:dishId", async (req, res) => {
+  try {
+    const { dishId } = req.params;
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input("DishId", sql.UniqueIdentifier, dishId)
+      .query(`
+        SELECT
+          d.DishId, d.Name, d.DishGroupId, d.currentcost AS Price,
+          d.DishCode, d.Description,
+          d.Imageid AS Image, CASE WHEN d.Imageid IS NOT NULL THEN 1 ELSE 0 END AS HasImage,
+          ISNULL(d.IsOpenItem, 0) AS IsOpenItem,
+          ISNULL(d.isServiceCharge, 1) AS isServiceCharge,
+          ISNULL(d.IsCombo, 0) AS IsCombo,
+          ISNULL(d.IsSoldOut, 0) AS IsSoldOut,
+          ISNULL(d.TakeawayCharge, 0) AS TakeawayCharge,
+          ISNULL(cat.IsPublished, 0) AS CategoryPublished,
+          ISNULL(dgm.IsPublished, 0) AS GroupPublished,
+          ISNULL(d.IsPublished, 0) AS IsPublished,
+          ISNULL(ckt.KitchenTypeCode, '2') AS KitchenTypeCode,
+          ISNULL(ISNULL(ckt.KitchenTypeName, cat.CategoryName), 'KITCHEN') AS KitchenTypeName,
+          CAST(ISNULL(d.IsDiscountAllowed, 1) AS INT) AS IsDiscountAllowed
+        FROM DishMaster d
+        LEFT JOIN DishGroupMaster dgm ON d.DishGroupId = dgm.DishGroupId
+        LEFT JOIN CategoryMaster cat ON dgm.CategoryId = cat.CategoryId
+        LEFT JOIN CategoryKitchenType ckt ON dgm.CategoryId = ckt.CategoryId
+        WHERE d.DishId = @DishId AND d.IsActive = 1
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ error: "Dish not found" });
+    }
+    res.json(result.recordset[0]);
+  } catch (err) {
+    console.error("[MENU DISH BY ID ERROR]", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -514,7 +557,7 @@ router.clearMenuCache = () => {
   cache.clear();
   console.log("⚡ [MenuCache] Cache INVALIDATION: All menu cache cleared dynamically");
   if (typeof imageCache !== 'undefined') {
-    try { imageCache.clear(); } catch(e){}
+    try { imageCache.clear(); } catch (e) { }
   }
   try {
     const comboRoutes = require("./combo");

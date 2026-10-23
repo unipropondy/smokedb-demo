@@ -326,6 +326,8 @@ app.use("/api/loyalty", loyaltyRoutes);
 app.use("/api/loyalty/configs", loyaltyConfigRoutes);
 app.use("/api/combo", comboRoutes);
 app.use("/api/rewards", rewardRoutes);
+const kioskCustomerRoutes = require("./routes/kioskCustomers");
+app.use("/api/kiosk-customers", kioskCustomerRoutes);
 const cashDrawerRouter = require("./routes/cashDrawer");
 app.use("/api/cash-drawer", cashDrawerRouter);
 const printJobsRouter = require("./routes/printJobs");
@@ -561,20 +563,30 @@ httpServer.listen(PORT, async () => {
   console.log("🍳 [KitchenSync] Background auto-sync started (every 3 minutes).");
 
   // 🔄 PRINT QUEUE CLEANUP: Reset stuck 'PROCESSING' jobs to 'PENDING' every 60 seconds
+  // IMPORTANT: Do NOT reset Attempts to 0 — that causes duplicate prints by treating
+  // already-dispatched jobs as brand new. Keep Attempts so retry backoff still applies.
   setInterval(async () => {
     try {
       const pool = await poolPromise;
       if (pool && pool.connected) {
         const result = await pool.request().query(`
           UPDATE PrintJobQueue
-          SET Status = 'PENDING', ProcessedOn = NULL, Attempts = 0
+          SET Status = 'PENDING', ProcessedOn = NULL
           WHERE Status = 'PROCESSING' AND DATEDIFF(minute, ProcessedOn, GETDATE()) >= 3
+            AND Attempts < 3
         `);
         if (result.rowsAffected[0] > 0) {
-          console.log(`🧹 [PrintQueue Cleanup] Reset ${result.rowsAffected[0]} stuck print jobs back to PENDING.`);
+          console.log(`🧹 [PrintQueue Cleanup] Reset ${result.rowsAffected[0]} stuck print jobs back to PENDING (attempts preserved).`);
           // Notify the print bridge client that jobs are available to print
           io.emit("print_jobs_available", { storeId: "STORE_001" });
         }
+        // Also permanently fail jobs that exceeded max attempts
+        await pool.request().query(`
+          UPDATE PrintJobQueue
+          SET Status = 'FAILED', ErrorMessage = 'Max retry attempts exceeded'
+          WHERE Status = 'PROCESSING' AND Attempts >= 3
+            AND DATEDIFF(minute, ProcessedOn, GETDATE()) >= 3
+        `);
       }
     } catch (err) {
       console.error("❌ [PrintQueue Cleanup] Error resetting stuck jobs:", err.message);

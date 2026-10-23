@@ -1708,20 +1708,44 @@ export default function Category() {
     setCarSearchError(null);
     setCustomerSearchResults([]);
 
+    const trimmedCar = carNumberInput.trim();
+
     try {
-      // Fetch ALL active customers for the modal list
+      // 1. If user entered a car number, search directly for that vehicle first
+      if (trimmedCar) {
+        const searchRes = await fetch(
+          `${API_URL}/api/kiosk-customers/search?carNumber=${encodeURIComponent(trimmedCar)}`
+        );
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          if (searchData.found && searchData.customer) {
+            setCustomerNameInput(searchData.customer.CustomerName || "");
+            setFoundCustomerVehicleId(searchData.customer.CustomerVehicleId || null);
+            setCarSearchError(null);
+            return;
+          }
+        } else if (searchRes.status === 404) {
+          // Car not found in DB - not an error, user can type the customer name and continue
+          setCarSearchError("No existing customer found. Enter name and press Continue.");
+          setFoundCustomerVehicleId(null);
+          return;
+        }
+      }
+
+      // 2. Otherwise (or if not found), fetch list of active customers for the modal
       const res = await fetch(`${API_URL}/api/kiosk-customers`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
           setCustomerSearchResults(data);
           setChooseCustomerVisible(true);
-          setChooseCustomerSearchQuery("");
+          setChooseCustomerSearchQuery(trimmedCar);
         } else {
           setCarSearchError("Customer data invalid.");
         }
       } else {
-        setCarSearchError("Search failed.");
+        const errText = await res.text().catch(() => "");
+        setCarSearchError(res.status === 404 ? "Kiosk customer service not deployed on backend." : (errText || "Search failed."));
       }
     } catch (err: any) {
       setCarSearchError(err.message || "Network error.");

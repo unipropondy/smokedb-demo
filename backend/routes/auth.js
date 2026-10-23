@@ -531,18 +531,19 @@ router.post("/login", async (req, res) => {
     }
 
     // Auto-migrate legacy password to bcrypt
-    if (needsRehash) {
-      try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.request()
-          .input("UserId", user.UserId)
-          .input("HashedPassword", hashedPassword)
-          .query("UPDATE [dbo].[UserMaster] SET UserPassword = @HashedPassword WHERE UserId = @UserId");
-        console.log(`[AUTH] Successfully migrated password to bcrypt for user "${user.UserName}".`);
-      } catch (e) {
-        console.error(`[AUTH] Failed to migrate password to bcrypt for user "${user.UserName}":`, e);
-      }
-    }
+    // if (needsRehash) {
+    //   try {
+    //     const hashedPassword = await bcrypt.hash(password, 10);
+    //     await pool.request()
+    //       .input("UserId", user.UserId)
+    //       .input("HashedPassword", hashedPassword)
+    //       .query("UPDATE [dbo].[UserMaster] SET UserPassword = @HashedPassword WHERE UserId = @UserId");
+    //     console.log(`[AUTH] Successfully migrated password to bcrypt for user "${user.UserName}".`);
+    //   } catch (e) {
+    //     console.error(`[AUTH] Failed to migrate password to bcrypt for user "${user.UserName}":`, e);
+    //   }
+    // }
+
 
     // ✅ VALIDATE USER-SPECIFIC LICENSE WINDOW
     if (user.ToDate) {

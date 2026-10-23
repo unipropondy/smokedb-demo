@@ -268,6 +268,7 @@ router.get("/all", async (req, res) => {
              ISNULL(sh.ServiceCharge, 0) as ServiceCharge,
              ISNULL(sh.TotalTax, 0) as TotalTax,
              ISNULL(sh.TakeawayCharge, 0) as TakeawayCharge,
+             ISNULL(sh.PaymodeServiceCharge, 0) as ExtraCharge,
              ISNULL(sts.ReceiptCount, 0) as ReceiptCount,
              ISNULL(sh.VoidItemQty, 0) as VoidQty,
              ISNULL(sh.VoidItemAmount, 0) as VoidAmount,
@@ -321,6 +322,7 @@ router.get("/all", async (req, res) => {
             0 AS ServiceCharge,
             0 AS TotalTax,
             0 AS TakeawayCharge,
+            0 AS ExtraCharge,
             1 AS ReceiptCount,
             0 AS VoidQty,
             0 AS VoidAmount,
@@ -368,6 +370,7 @@ router.get("/all", async (req, res) => {
              ISNULL(sh.ServiceCharge, 0) as ServiceCharge,
              ISNULL(sh.TotalTax, 0) as TotalTax,
              ISNULL(sh.TakeawayCharge, 0) as TakeawayCharge,
+             ISNULL(sh.PaymodeServiceCharge, 0) as ExtraCharge,
              ISNULL(sts.ReceiptCount, 0) as ReceiptCount,
              ISNULL(sh.VoidItemQty, 0) as VoidQty,
              ISNULL(sh.VoidItemAmount, 0) as VoidAmount,
@@ -420,6 +423,7 @@ router.get("/all", async (req, res) => {
             0 AS ServiceCharge,
             0 AS TotalTax,
             0 AS TakeawayCharge,
+            0 AS ExtraCharge,
             1 AS ReceiptCount,
             0 AS VoidQty,
             0 AS VoidAmount,
@@ -1256,6 +1260,7 @@ router.get("/day-end-summary", async (req, res) => {
           SUM(ISNULL(sh.ServiceCharge, 0)) as TotalServiceCharge,
           SUM(ISNULL(sh.RoundedBy, 0)) as TotalRoundOff,
           SUM(ISNULL(sh.TakeawayCharge, 0)) as TotalTakeawayCharge,
+          SUM(ISNULL(sh.PaymodeServiceCharge, 0)) as TotalExtraCharge,
           COUNT(sh.SettlementID) as TotalBills,
           SUM(ISNULL(sh.VoidItemQty, 0)) as VoidQty,
           SUM(ISNULL(sh.VoidItemAmount, 0)) as VoidAmount,
@@ -1269,7 +1274,7 @@ router.get("/day-end-summary", async (req, res) => {
  
     const analysis = analysisRes.recordset[0] || { 
       BaseSales: 0, TotalSales: 0, TotalTax: 0, TotalDiscount: 0, TotalServiceCharge: 0, 
-      TotalRoundOff: 0, TotalTakeawayCharge: 0, TotalBills: 0, VoidQty: 0, VoidAmount: 0
+      TotalRoundOff: 0, TotalTakeawayCharge: 0, TotalExtraCharge: 0, TotalBills: 0, VoidQty: 0, VoidAmount: 0
     };
 
     const totalSales = analysis.TotalSales || 0;
@@ -1440,6 +1445,7 @@ router.get("/day-end-summary", async (req, res) => {
         totalDiscount: analysis.TotalDiscount || 0,
         totalServiceCharge: analysis.TotalServiceCharge || 0,
         takeawayCharge: analysis.TotalTakeawayCharge || 0,
+        extraCharge: analysis.TotalExtraCharge || 0,
         roundOff: analysis.TotalRoundOff || 0,
         netTotal: totalSales, 
         billCount,
@@ -1539,7 +1545,7 @@ router.post("/save", async (req, res) => {
       discountAmount, discountType, roundOff, orderId, orderType, tableNo, section, memberId, cashierId, tableId,
       serverId, serverName, isSplit,
       discountId, discountPercentage, discountRemarks, orderDiscountAmount, itemDiscountAmount, payments,
-      rewardMemberId
+      rewardMemberId, carNumber
     } = req.body;
 
     const isSplitParsed = (isSplit === true || isSplit === "true" || isSplit === 1 || isSplit === "1");
@@ -1617,7 +1623,7 @@ router.post("/save", async (req, res) => {
       }
       let billNo = ""; // Will be set to displayOrderId later
 
-      const paymodesRes = await transaction.request().query("SELECT Position, PayMode, Description FROM [dbo].[Paymode] WHERE Active = 1");
+      const paymodesRes = await transaction.request().query("SELECT Position, PayMode, Description, ISNULL(ExtraCharges, 0) AS ExtraCharges FROM [dbo].[Paymode] WHERE Active = 1");
       activePaymodes = paymodesRes.recordset || [];
 
       const activeOrg = await getActiveOrganization();
@@ -1808,6 +1814,26 @@ router.post("/save", async (req, res) => {
     const normalizedPayMode = normalizePayMode(paymentMethod);
     const payModeCode = normalizedPayMode === "CASH" ? 1 : normalizedPayMode === "CARD" ? 2 : 3;
 
+    // ── PAYMODE EXTRA CHARGES ──────────────────────────────────────────────────
+    // Resolve ExtraCharges from the PAYMODE table (backend-authoritative, never trust frontend total).
+    // For split payments there is no single paymode, so extra charges are not applied (each split
+    // mode's extra charge is handled by processSplitPayments if needed in future).
+    const normUpper2 = normalizedPayMode.toUpperCase().trim();
+    const matchedPaymode = activePaymodes.find(x => {
+      const pm   = String(x.PayMode    || "").trim().toUpperCase();
+      const desc = String(x.Description || "").trim().toUpperCase();
+      return pm === normUpper2 || desc === normUpper2 ||
+             (normUpper2.includes("YEAHPAY") && (pm.includes("YEAHPAY") || desc.includes("YEAHPAY")));
+    });
+    const extraCharges = (payments && Array.isArray(payments) && payments.length > 1)
+      ? 0  // split payments — no single-mode surcharge
+      : Number(matchedPaymode?.ExtraCharges || 0);
+    // finalTotal is the backend-computed authoritative total sent to every table
+    const subTotalNum = Number(subTotal || 0);
+    const finalTotal  = parseFloat((subTotalNum + extraCharges).toFixed(2));
+    console.log(`[SAVE SALE] ExtraCharges=${extraCharges} | subTotal=${subTotalNum} | finalTotal=${finalTotal} | payMode=${normalizedPayMode}`);
+    // ──────────────────────────────────────────────────────────────────────────
+
     const headerResult = await transaction.request()
       .input("SettlementID", sql.UniqueIdentifier, settlementId)
       .input("LastSettlementDate", sql.DateTime, now)
@@ -1822,8 +1848,9 @@ router.post("/save", async (req, res) => {
       .input("MemberId", sql.UniqueIdentifier, toGuidOrNull(memberId))
       .input("CashierID", sql.UniqueIdentifier, toGuidOrNull(cashierId))
       .input("BusinessUnitId", sql.UniqueIdentifier, sanitizeGuid(businessUnitId))
-      .input("SysAmount", sql.Money, totalAmount || 0)
-      .input("ManualAmount", sql.Money, totalAmount || 0)
+      .input("SysAmount", sql.Money, finalTotal)
+      .input("ManualAmount", sql.Money, finalTotal)
+      .input("PaymodeServiceCharge", sql.Decimal(18, 2), extraCharges)
       .input("CreatedBy", sql.UniqueIdentifier, sanitizeGuid(cashierId))
       .input("CreatedOn", sql.DateTime, now)
       .input("SER_NAME", sql.NVarChar(255), req.body.serverName || null)
@@ -1851,12 +1878,12 @@ router.post("/save", async (req, res) => {
         INSERT INTO SettlementHeader (
           SettlementID, LastSettlementDate, LastDayEndDate, SubTotal, TotalTax, DiscountAmount, DiscountType, 
           BillNo, OrderType, TableNo, Section, MemberId, CashierID, BusinessUnitId, 
-          SysAmount, ManualAmount, CreatedBy, CreatedOn, SER_NAME, MobileNo, 
+          SysAmount, ManualAmount, PaymodeServiceCharge, CreatedBy, CreatedOn, SER_NAME, MobileNo, 
           VoidItemQty, VoidItemAmount, RoundedBy, ServiceCharge, GuestName, Pax, TotalPax, TakeawayCharge, start_date
         ) VALUES (
           @SettlementID, GETDATE(), GETDATE(), @SubTotal, @TotalTax, @DiscountAmount, @DiscountType, 
           @BillNo, @OrderType, @TableNo, @Section, @MemberId, @CashierID, @BusinessUnitId, 
-          @SysAmount, @ManualAmount, @CreatedBy, GETDATE(), @SER_NAME, @MobileNo, 
+          @SysAmount, @ManualAmount, @PaymodeServiceCharge, @CreatedBy, GETDATE(), @SER_NAME, @MobileNo, 
           @VoidItemQty, @VoidItemAmount, @RoundedBy, @ServiceCharge, @GuestName, @Pax, @Pax, @TakeawayCharge, @startDate
         );
 
@@ -1937,8 +1964,8 @@ router.post("/save", async (req, res) => {
         const settlementReq = transaction.request()
           .input("SettlementID", sql.UniqueIdentifier, settlementId)
           .input("PayMode", sql.VarChar(50), normalizedPayMode)
-          .input("SysAmount", sql.Money, totalAmount || 0)
-          .input("ManualAmount", sql.Money, totalAmount || 0)
+          .input("SysAmount", sql.Money, finalTotal)
+          .input("ManualAmount", sql.Money, finalTotal)
           .input("AmountDiff", sql.Money, 0)
           .input("ReceiptCount", sql.Numeric(18, 0), receiptCount);
 
@@ -2183,7 +2210,8 @@ router.post("/save", async (req, res) => {
             .input("BilledFor", sql.Int, 1)
             .input("PaymentType", sql.Int, 1)
             .input("Paymode", sql.Int, paymodePosition)
-            .input("Amount", sql.Decimal(18, 2), totalAmount || 0)
+            .input("Amount", sql.Decimal(18, 2), finalTotal)
+            .input("PaymodeServiceChargeAmount", sql.Decimal(18, 2), extraCharges)
             .input("ReferenceNumber", sql.VarChar(100), null)
             .input("Remarks", sql.VarChar(500), paymentMethod || "")
             .input("BusinessUnitId", sql.UniqueIdentifier, sanitizeGuid(businessUnitId))
@@ -2193,9 +2221,9 @@ router.post("/save", async (req, res) => {
             .query(`
               -- 🛡️ ATOMIC SYNC: Populating both tables in one go for report integrity
               
-              -- 1. Current Table (for POS views)
-              INSERT INTO [dbo].[PaymentDetailCur] (PaymentId, RestaurantBillId, BilledFor, PaymentCollectedOn, PaymentType, Paymode, Amount, ReferenceNumber, Remarks, BusinessUnitId, CreatedBy, CreatedOn, ModifiedBy, ModifiedOn, start_date)
-              VALUES (@PaymentId, @RestaurantBillId, @BilledFor, GETDATE(), @PaymentType, @Paymode, @Amount, @ReferenceNumber, @Remarks, @BusinessUnitId, @CreatedBy, GETDATE(), @ModifiedBy, GETDATE(), @startDate);
+              -- 1. Current Table (for POS views) — Amount = finalTotal (subTotal + ExtraCharges)
+              INSERT INTO [dbo].[PaymentDetailCur] (PaymentId, RestaurantBillId, BilledFor, PaymentCollectedOn, PaymentType, Paymode, Amount, PaymodeServiceChargeAmount, ReferenceNumber, Remarks, BusinessUnitId, CreatedBy, CreatedOn, ModifiedBy, ModifiedOn, start_date)
+              VALUES (@PaymentId, @RestaurantBillId, @BilledFor, GETDATE(), @PaymentType, @Paymode, @Amount, @PaymodeServiceChargeAmount, @ReferenceNumber, @Remarks, @BusinessUnitId, @CreatedBy, GETDATE(), @ModifiedBy, GETDATE(), @startDate);
 
               -- 2. Master Table (CRITICAL for Backoffice Reports: vw_PaymentDetail)
               INSERT INTO [dbo].[PaymentDetail] (
@@ -2422,7 +2450,7 @@ router.post("/save", async (req, res) => {
         try {
           await transaction.request()
             .input("orderNo", sql.NVarChar(50), displayOrderId)
-            .input("totalAmt", sql.Decimal(18, 2), totalAmount)
+            .input("totalAmt", sql.Decimal(18, 2), finalTotal)
             .input("subTotal", sql.Decimal(18, 2), subTotal || 0)
             .input("DiscountId", sql.UniqueIdentifier, toGuidOrNull(discountId))
             .input("DiscountPercentage", sql.Decimal(18, 2), discountPercentage || null)
@@ -2667,6 +2695,28 @@ router.post("/save", async (req, res) => {
         }
       }
 
+      // 6. Update kioskCustomer if carNumber and dishId are present
+      if (carNumber && items && Array.isArray(items) && items.length > 0) {
+        const activeItems = items.filter(i => i.status !== "VOIDED" && i.statusCode !== 0 && i.StatusCode !== 0);
+        const defaultDishId = activeItems.length > 0 ? toGuidOrNull(activeItems[0].dishId || activeItems[0].id) : toGuidOrNull(items[0].dishId || items[0].id);
+        
+        if (defaultDishId) {
+          try {
+            await transaction.request()
+              .input("CarNumber", sql.NVarChar(50), String(carNumber).trim().toUpperCase())
+              .input("DefaultDishId", sql.UniqueIdentifier, defaultDishId)
+              .query(`
+                UPDATE kioskCustomer 
+                SET DefaultDishId = @DefaultDishId, UpdatedOn = GETDATE()
+                WHERE UPPER(CarNumber) = @CarNumber AND IsActive = 1
+              `);
+            console.log(`[SAVE SALE] Updated kioskCustomer DefaultDishId for car: ${carNumber} to ${defaultDishId}`);
+          } catch (kioskErr) {
+            console.error("⚠️ [SAVE SALE] kioskCustomer update failed:", kioskErr.message);
+          }
+        }
+      }
+
     }, { name: "SaveSale", timeoutMs: 60000 });
 
     // 🚀 POST-SAVE VALIDATION: Deep integrity check for Backoffice compatibility
@@ -2802,6 +2852,27 @@ router.post("/save", async (req, res) => {
        }
      }
 
+     // 7. Update KioskCustomer DefaultDishId based on CarNumber
+     if (carNumber && items && items.length > 0) {
+       try {
+         const firstDishId = toGuidOrNull(items[0].dishId || items[0].id);
+         if (firstDishId) {
+           await pool.request()
+             .input("CarNumber", sql.NVarChar(50), String(carNumber).trim().toUpperCase())
+             .input("DefaultDishId", sql.UniqueIdentifier, firstDishId)
+             .input("UpdatedOn", sql.DateTime, new Date())
+             .query(`
+               UPDATE kioskCustomer
+               SET DefaultDishId = @DefaultDishId, UpdatedOn = @UpdatedOn
+               WHERE UPPER(CarNumber) = @CarNumber AND IsActive = 1
+             `);
+           console.log(`[SAVE SALE] Updated kioskCustomer DefaultDishId for CarNumber ${carNumber}`);
+         }
+       } catch (kioskErr) {
+         console.error(`[SAVE SALE] Failed to update kioskCustomer DefaultDishId (non-blocking):`, kioskErr.message);
+       }
+     }
+
     res.json({
       success: true,
       settlementId,
@@ -2883,7 +2954,8 @@ router.get("/payment-methods", async (req, res) => {
           ISNULL(Commission, 0)      as commission,
           ISNULL(ServiceCharge, 0)   as serviceCharge,
           ISNULL(IsEntertainment, 0) as isEntertainment,
-          ISNULL(IsVoucher, 0)       as isVoucher
+          ISNULL(IsVoucher, 0)       as isVoucher,
+          ISNULL(ExtraCharges, 0)    as extraCharges
         FROM [dbo].[Paymode] 
         ORDER BY Position ASC
       `);

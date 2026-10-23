@@ -88,15 +88,35 @@ router.get('/pending', authenticateBridge, async (req, res) => {
           AND (
             (Status = 'PENDING' AND (
               Attempts = 0 
-              OR (Attempts = 1 AND DATEDIFF(second, ProcessedOn, GETDATE()) >= 2)
-              OR (Attempts = 2 AND DATEDIFF(second, ProcessedOn, GETDATE()) >= 5)
+              OR (Attempts = 1 AND DATEDIFF(second, ProcessedOn, GETDATE()) >= 3)
+              OR (Attempts = 2 AND DATEDIFF(second, ProcessedOn, GETDATE()) >= 6)
             ))
-            OR (Status = 'PROCESSING' AND DATEDIFF(minute, ProcessedOn, GETDATE()) >= 2 AND Attempts < 3)
+            OR (Status = 'PROCESSING' AND DATEDIFF(minute, ProcessedOn, GETDATE()) >= 5 AND Attempts < 3)
           )
         ORDER BY CreatedOn ASC
       `);
 
-    let jobs = result.recordset || [];
+    let allJobs = result.recordset || [];
+
+    const processingReq = new sql.Request(transaction);
+    const processingRes = await processingReq.query(`
+      SELECT DISTINCT PrinterIp 
+      FROM PrintJobQueue 
+      WHERE Status = 'PROCESSING'
+    `);
+    const seenIps = new Set();
+    for (const row of processingRes.recordset || []) {
+      seenIps.add(normalizeIp(row.PrinterIp));
+    }
+
+    let jobs = [];
+    for (const job of allJobs) {
+      const ip = normalizeIp(job.PrinterIp);
+      if (!seenIps.has(ip)) {
+        seenIps.add(ip);
+        jobs.push(job);
+      }
+    }
 
     if (jobs.length > 0) {
       // NOTE: Do NOT decode the base64 cash drawer command here.
@@ -284,6 +304,78 @@ router.post('/', authenticateBridge, async (req, res) => {
     }
 
     const jobId = require('crypto').randomUUID();
+
+    // ============================================================
+    // SMART DEDUPLICATION GUARD
+    //
+    // RECEIPTS (type 1 or 3): Block if SAME content was queued to 
+    //   the SAME printer within 30 seconds (regardless of status).
+    //   This prevents double-tapping / screen remount duplicates.
+    //
+    // KOT/KDS (type 2 or 4): ONLY block if a job is still 
+    //   PENDING or PROCESSING (not FAILED). FAILED jobs can always
+    //   be retried — this fixes "KOT not printing on first order 
+    //   after a printer timeout".
+    //
+    // Memory Guard: Blocks burst-simultaneous requests (race conditions)
+    //   for receipts only, with a 5s window.
+    // ============================================================
+
+    if (pType === 1 || pType === 3) {
+      // RECEIPT: in-memory guard for race conditions (5s window)
+      let contentHash = 0;
+      for (let i = 0; i < content.length; i++) {
+        contentHash = ((contentHash << 5) - contentHash) + content.charCodeAt(i);
+        contentHash |= 0;
+      }
+      const memKey = `${printerIp}_${contentHash}`;
+      if (!global.printJobDedupCache) global.printJobDedupCache = new Map();
+      const cachedTime = global.printJobDedupCache.get(memKey);
+      if (cachedTime && Date.now() - cachedTime < 5000) {
+        console.log(`[PrintQueue] DEDUP (Memory): Blocked burst receipt for ${printerIp}.`);
+        return res.json({ success: true, message: 'Print job already queued (memory dedup)', jobId: jobId, printerIp, printerName });
+      }
+      global.printJobDedupCache.set(memKey, Date.now());
+
+      // RECEIPT: SQL guard — block same content within 30s (any status)
+      const dupCheckRes = await pool.request()
+        .input('PrinterIp', sql.NVarChar(100), printerIp)
+        .input('Content', sql.NVarChar(sql.MAX), content)
+        .query(`
+          SELECT TOP 1 JobId, Status 
+          FROM PrintJobQueue
+          WHERE PrinterIp = @PrinterIp
+            AND Content = @Content
+            AND DATEDIFF(second, CreatedOn, GETDATE()) < 30
+          ORDER BY CreatedOn DESC
+        `);
+      if (dupCheckRes.recordset.length > 0) {
+        const existingJobId = dupCheckRes.recordset[0].JobId;
+        console.log(`[PrintQueue] DEDUP: Receipt already queued for ${printerIp} (JobId=${existingJobId}). Skipping.`);
+        return res.json({ success: true, message: 'Print job already queued (dedup)', jobId: existingJobId, printerIp, printerName });
+      }
+
+    } else if (pType === 2 || pType === 4) {
+      // KOT/KDS: ONLY block if same content is still PENDING or PROCESSING.
+      // Do NOT block FAILED jobs — those must be retried!
+      const dupCheckRes = await pool.request()
+        .input('PrinterIp', sql.NVarChar(100), printerIp)
+        .input('Content', sql.NVarChar(sql.MAX), content)
+        .query(`
+          SELECT TOP 1 JobId, Status 
+          FROM PrintJobQueue
+          WHERE PrinterIp = @PrinterIp
+            AND Content = @Content
+            AND Status IN ('PENDING', 'PROCESSING')
+            AND DATEDIFF(second, CreatedOn, GETDATE()) < 30
+          ORDER BY CreatedOn DESC
+        `);
+      if (dupCheckRes.recordset.length > 0) {
+        const existingJobId = dupCheckRes.recordset[0].JobId;
+        console.log(`[PrintQueue] DEDUP: KOT/KDS still pending for ${printerIp} (JobId=${existingJobId}). Skipping duplicate.`);
+        return res.json({ success: true, message: 'Print job already queued (dedup)', jobId: existingJobId, printerIp, printerName });
+      }
+    }
 
     // Insert the job into PrintJobQueue
     await pool.request()
