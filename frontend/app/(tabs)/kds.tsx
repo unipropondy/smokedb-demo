@@ -721,7 +721,7 @@ export default function KDSScreen() {
             ref={flatListRef}
             data={kitchenOrders}
             renderItem={renderOrder}
-            keyExtractor={(item: any) => item.orderId}
+            keyExtractor={(item: any) => item.groupKey || item.orderId}
             numColumns={numColumns}
             key={numColumns}
             extraData={time}

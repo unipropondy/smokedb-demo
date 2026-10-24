@@ -614,7 +614,13 @@ class UniversalPrinter {
     const frameId = `kot-print-iframe-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const frame = document.createElement("iframe");
     frame.id = frameId;
-    frame.style.display = "none";
+    frame.style.position = "fixed";
+    frame.style.right = "0";
+    frame.style.bottom = "0";
+    frame.style.width = "0";
+    frame.style.height = "0";
+    frame.style.border = "0";
+    frame.style.opacity = "0";
     document.body.appendChild(frame);
     // Auto-remove after 15s
     setTimeout(() => { try { frame.remove(); } catch (_) {} }, 15000);
@@ -2039,7 +2045,13 @@ class UniversalPrinter {
         if (!frame) {
           frame = document.createElement("iframe");
           frame.id = "print-iframe";
-          frame.style.display = "none";
+          frame.style.position = "fixed";
+          frame.style.right = "0";
+          frame.style.bottom = "0";
+          frame.style.width = "0";
+          frame.style.height = "0";
+          frame.style.border = "0";
+          frame.style.opacity = "0";
           document.body.appendChild(frame);
         }
 

@@ -1405,9 +1405,8 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
         displayOrderId = `ORD-${new Date().toISOString().split("T")[0].replace(/-/g, "")}-${timestamp}`;
       }
       const currentOrderId = displayOrderId;
-      (async () => {
-        const printData = {
-          id: currentOrderId,
+      const printData = {
+        id: currentOrderId,
           invoiceNumber: currentOrderId,
           date: new Date(),
           items: cart.filter(
@@ -1425,17 +1424,20 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
           paymentMethod: "CASH",
         };
 
-        if (enableCheckoutBill) {
-          console.log("🖨️ [SidebarTurboPrint] Sending to printer instantly...");
-          try {
+      if (enableCheckoutBill) {
+        console.log("🖨️ [SidebarTurboPrint] Sending to printer instantly...");
+        try {
+          if (Platform.OS === "web") {
+            await UniversalPrinter.printCheckoutBill(printData, user?.userId);
+          } else {
             UniversalPrinter.printCheckoutBill(printData, user?.userId);
-          } catch (e) {
-            console.error("Sidebar Print Error:", e);
           }
-        } else {
-          console.log("🖨️ [SidebarTurboPrint] Checkout Bill printing is disabled.");
+        } catch (e) {
+          console.error("Sidebar Print Error:", e);
         }
-      })();
+      } else {
+        console.log("🖨️ [SidebarTurboPrint] Checkout Bill printing is disabled.");
+      }
 
       if (enableCheckoutFlow !== false) {
         // 🚀 INSTANT REDIRECT: Go back to Floor Plan immediately for hyper-speed UX
@@ -1477,13 +1479,6 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
           const res = await useCartStore.getState().checkoutOrder(tableId);
           if (res && res.success) {
             useActiveOrdersStore.getState().fetchActiveKitchenOrders().catch(() => { });
-            // Broadcast new order to sync KDS screens instantly via sockets
-            socket.emit("new_order", {
-              orderId: currentOrderId,
-              context: orderContext,
-              items: cart.filter((i: any) => i.status !== "VOIDED" && i.statusCode !== 0),
-              createdAt: Date.now()
-            });
           }
         } catch (e) {
           console.error("Background checkout failed:", e);

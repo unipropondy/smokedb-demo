@@ -120,19 +120,32 @@ const storeCreator: StateCreator<
     // 🔥 GET DISCOUNT FROM CART STORE
     const discount = contextId && useCartStore.getState().discounts[contextId];
 
+    const cleanIncomingOrderId = orderId ? String(orderId).replace('#', '').trim() : '';
+
     const existingOrderIndex = activeOrders.findIndex((o) => {
-      if (context.orderType === "DINE_IN") {
-        return (
-          o.context.orderType === "DINE_IN" &&
-          String(o.context.section || "").trim().toLowerCase() === String(context.section || "").trim().toLowerCase() &&
-          String(o.context.tableNo || "").trim().toLowerCase() === String(context.tableNo || "").trim().toLowerCase()
-        );
+      const cleanExistingOrderId = o.orderId ? String(o.orderId).replace('#', '').trim() : '';
+      if (cleanIncomingOrderId && cleanExistingOrderId && cleanIncomingOrderId !== "NEW" && cleanExistingOrderId !== "NEW" && cleanIncomingOrderId === cleanExistingOrderId) {
+        return true;
       }
 
-      if (context.orderType === "TAKEAWAY") {
+      const incomingTblId = context.tableId ? String(context.tableId).replace(/^\{|\}$/g, "").trim().toLowerCase() : "";
+      const existingTblId = o.context.tableId ? String(o.context.tableId).replace(/^\{|\}$/g, "").trim().toLowerCase() : "";
+      if (incomingTblId && existingTblId && incomingTblId === existingTblId) {
+        return true;
+      }
+
+      if (context.orderType === "DINE_IN" && o.context.orderType === "DINE_IN") {
+        const sec1 = String(o.context.section || "").trim().toUpperCase().replace(/[- ]+/g, "_");
+        const sec2 = String(context.section || "").trim().toUpperCase().replace(/[- ]+/g, "_");
+        const tbl1 = String(o.context.tableNo || "").trim().toLowerCase();
+        const tbl2 = String(context.tableNo || "").trim().toLowerCase();
+        return sec1 === sec2 && tbl1 === tbl2;
+      }
+
+      if (context.orderType === "TAKEAWAY" && o.context.orderType === "TAKEAWAY") {
         return (
-          o.context.orderType === "TAKEAWAY" &&
-          String(o.context.takeawayNo || "").trim().toLowerCase() === String(context.takeawayNo || "").trim().toLowerCase()
+          String(o.context.takeawayNo || "").trim().toLowerCase() ===
+          String(context.takeawayNo || "").trim().toLowerCase()
         );
       }
 
