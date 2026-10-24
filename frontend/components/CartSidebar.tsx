@@ -1552,22 +1552,28 @@ export default React.memo(function CartSidebar({ width = 400 }: CartSidebarProps
       createdAt: Date.now(),
     });
 
-    // 2. Start Printers immediately (No waiting)
-    (async () => {
-      const isAdditional = cart.some((i: any) => isItemSent(i));
-      await UniversalPrinter.routeAndPrintOrderKOT(
-        currentOrderId,
-        orderContext,
-        currentItems,
-        isAdditional,
-        user?.userName || "Staff",
-        true // skipDuplicateGuard: cashier manual send is always authoritative
-      );
-    })();
+    // 2. Start Printers
+    const isAdditional = cart.some((i: any) => isItemSent(i));
+    const printPromise = UniversalPrinter.routeAndPrintOrderKOT(
+      currentOrderId,
+      orderContext,
+      currentItems,
+      isAdditional,
+      user?.userName || "Staff",
+      true // skipDuplicateGuard: cashier manual send is always authoritative
+    );
+
+    if (Platform.OS === "web") {
+      try {
+        await printPromise;
+      } catch (e) {
+        console.error("KOT Web Print Error:", e);
+      }
+    }
 
     const shouldSkipRedirect = skipRedirect || enableDirectPaymentToProcess;
 
-    // 3. Close Sidebar & Redirect instantly
+    // 3. Close Sidebar & Redirect
     if (!shouldSkipRedirect) {
       router.replace(`/(tabs)/category?section=${orderContext.section}`);
     }
