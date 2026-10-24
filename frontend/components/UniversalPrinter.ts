@@ -437,7 +437,9 @@ class UniversalPrinter {
   private static async queuePrintJob(
     printerType: number,
     kitchenTypeValue: string | number | undefined,
-    content: string
+    content: string,
+    printerIp?: string,
+    kitchenName?: string,
   ): Promise<boolean> {
     try {
       const storeId = "STORE_001";
@@ -451,7 +453,9 @@ class UniversalPrinter {
         body: JSON.stringify({
           printerType,
           kitchenTypeValue: kitchenTypeValue !== undefined ? String(kitchenTypeValue) : undefined,
-          content
+          content,
+          printerIp,
+          kitchenName,
         })
       });
       const data = await response.json();
@@ -492,7 +496,7 @@ class UniversalPrinter {
           isHold: false,
         }),
       });
-      console.log("ðŸ“ Print job logged to PrintReport");
+      console.log("📄 Print job logged to PrintReport");
     } catch (logErr) {
       console.warn("Failed to log print to DB:", logErr);
     }
@@ -507,7 +511,7 @@ class UniversalPrinter {
       try {
         const isOnline = await this.isBridgeOnline();
         if (!isOnline) {
-          console.log("ðŸ“¡ [Web Print Bridge] Bridge is OFFLINE. Direct fallback to preview.");
+          console.log("📡 [Web Print Bridge] Bridge is OFFLINE. Direct fallback to preview.");
           const html = this.generateKOTHTML(orderData, "KDS_PRINT");
           let frame = document.getElementById("kot-print-iframe") as HTMLIFrameElement;
           if (!frame) {
@@ -536,15 +540,16 @@ class UniversalPrinter {
         }
 
         const text = this.formatKOTThermalText(orderData, "KDS_PRINT");
-        console.log(`ðŸ“¡ [Web Print Bridge] Queueing KDS print`);
-        const success = await this.queuePrintJob(4, undefined, text);
+        console.log(`📡 [Web Print Bridge] Queueing KDS print`);
+        const targetIp = kdsPrinterIp || orderData.PrinterIP || orderData.printerIp;
+        const success = await this.queuePrintJob(4, undefined, text, targetIp, "KDS Printer");
         if (success) {
           await this.logPrintJob(orderData.orderId, orderData.orderNo, "REPRINT");
           return true;
         }
 
         // Web Fallback: If Print Bridge failed, trigger iframe preview
-        console.log("âš ï¸ [Web KDS Print] Print Bridge queue failed. Falling back to iframe print preview.");
+        console.log("⚠️ [Web KDS Print] Print Bridge queue failed. Falling back to iframe print preview.");
         const html = this.generateKOTHTML(orderData, "KDS_PRINT");
         let frame = document.getElementById("kot-print-iframe") as HTMLIFrameElement;
         if (!frame) {
@@ -656,7 +661,7 @@ class UniversalPrinter {
       try {
         const isOnline = await this.isBridgeOnline();
         if (!isOnline) {
-          console.log("ðŸ“¡ [Web Print Bridge] Bridge is OFFLINE. Direct fallback to preview.");
+          console.log("📡 [Web Print Bridge] Bridge is OFFLINE. Direct fallback to preview.");
           this.printKOTViaFrame(this.generateKOTHTML(orderData, type), 50);
           await this.logPrintJob(orderData.orderId, orderData.orderNo, type);
           return true;
@@ -665,8 +670,10 @@ class UniversalPrinter {
         const text = this.formatKOTThermalText(orderData, type);
         // Map kitchenCode or kitchenTypeValue
         const kitchenTypeValue = orderData.kitchenCode || orderData.KitchenCode || orderData.kitchenTypeValue || orderData.KitchenTypeValue || "0";
-        console.log(`ðŸ“¡ [Web Print Bridge] Queueing KOT to Kitchen type: ${kitchenTypeValue}`);
-        const success = await this.queuePrintJob(2, kitchenTypeValue, text);
+        const printerIp = printerIpOverride || orderData.PrinterIP || orderData.printerIp;
+        const kitchenName = orderData.kitchenName || orderData.KitchenTypeName;
+        console.log(`📡 [Web Print Bridge] Queueing KOT to Kitchen type: ${kitchenTypeValue}, IP: ${printerIp || 'default'}, Kitchen: ${kitchenName || 'N/A'}`);
+        const success = await this.queuePrintJob(2, kitchenTypeValue, text, printerIp, kitchenName);
         if (success) {
           await this.logPrintJob(orderData.orderId, orderData.orderNo, type);
           return true;
@@ -1479,7 +1486,13 @@ class UniversalPrinter {
     discountInfo?: DiscountInfo,
   ): Promise<boolean> {
     try {
-      // âœ… FIX: Match the logic in PaymentSuccess by ensuring we have a valid ID
+      const orderId = saleData.invoiceNumber || saleData.orderId || saleData.id;
+      if (orderId && this.isDuplicateReceiptPrint(`checkout_${orderId}`)) {
+        console.log(`🛡️ [UniversalPrinter] Duplicate checkout bill blocked for Order: ${orderId}`);
+        return true;
+      }
+
+      // ✅ FIX: Match the logic in PaymentSuccess by ensuring we have a valid ID
       const targetUserId = outletId || "1";
       const company = await BillPDFGenerator.loadSettings(targetUserId);
 
